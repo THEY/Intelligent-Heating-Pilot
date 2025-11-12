@@ -130,7 +130,7 @@ pip install debugpy
 
 **Note** : Cette méthode nécessite que le conteneur Home Assistant expose le port 5678.
 
-## � Modifier la Configuration
+## Modifier la Configuration
 
 Pour changer les entités surveillées après l'installation :
 
@@ -143,7 +143,7 @@ Pour changer les entités surveillées après l'installation :
 
 L'intégration se rechargera automatiquement et commencera à surveiller les nouvelles entités.
 
-## �🔍 Checklist de Débogage
+## 🔍 Checklist de Débogage
 
 Quand une intégration ne fonctionne pas :
 

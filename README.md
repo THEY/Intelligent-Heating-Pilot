@@ -124,7 +124,7 @@ automation:
           hvac_mode: heat
 ```
 
-## � Intelligent Calculation Logic (Online Machine Learning)
+## Intelligent Calculation Logic (Online Machine Learning)
 
 The Smart Starter VTherm goes beyond static calculations by employing an **online machine learning model** to dynamically learn and adapt to your specific environment. Instead of relying on a fixed "thermal slope," the system continuously refines its understanding of your heating system's behavior based on historical data and new observations from your Home Assistant installation.
 

@@ -81,9 +81,9 @@ class TestIntegrationStructure(unittest.TestCase):
     def test_const_module_imports(self):
         """Test that const module can be imported."""
         try:
-            from const import DOMAIN, DEFAULT_THERMAL_SLOPE
+            from const import DOMAIN, DEFAULT_HEATING_SLOPE
             self.assertEqual(DOMAIN, 'smart_starter_vtherm')
-            self.assertEqual(DEFAULT_THERMAL_SLOPE, 2.0)
+            self.assertEqual(DEFAULT_HEATING_SLOPE, 2.0)
         except ImportError as e:
             self.fail(f"Failed to import const: {e}")
 
