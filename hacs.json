@@ -1,7 +1,7 @@
 {
   "name": "Smart Starter VTherm",
   "render_readme": true,
-  "domains": ["smart_starter_vtherm"],
+  "domains": ["smart_starter_vtherm", "ai", "machine-learning"],
   "iot_class": "Calculated",
   "homeassistant": "2023.1.0"
 }
