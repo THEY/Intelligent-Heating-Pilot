@@ -2,68 +2,85 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 
-Intégration Home Assistant pour Versatile Thermostat (VTherm). Démarre le chauffage en avance de façon intelligente pour garantir la température cible exacte à l'heure planifiée, en tenant compte du slope thermique, de la température extérieure et du planning.
+Home Assistant integration for Versatile Thermostat (VTherm). Intelligently preheats your home to ensure the exact target temperature at the scheduled time, taking into account thermal slope, outdoor temperature, and scheduling.
 
-## 🌟 Fonctionnalités
+## 🌟 Features
 
-- **Calcul intelligent du temps de préchauffage** : Détermine automatiquement quand démarrer le chauffage pour atteindre la température cible à l'heure exacte
-- **Prise en compte des conditions extérieures** : Adapte le calcul en fonction de la température extérieure
-- **Modélisation thermique** : Utilise le "slope thermique" (vitesse de chauffe) de votre pièce
-- **Service Home Assistant** : Facile à intégrer dans vos automatisations
-- **Capteurs dédiés** : Expose la durée de préchauffage et l'heure de démarrage optimale
-- **Interface de configuration** : Configuration via l'interface utilisateur Home Assistant
+- **Intelligent Preheat Time Calculation**: Automatically determines when to start heating to reach the target temperature at the exact scheduled time.
+- **Outdoor Conditions Awareness**: Adapts calculations based on outdoor temperature.
+- **Thermal Modeling**: Utilizes the "thermal slope" (heating rate) of your room.
+- **Home Assistant Service**: Easy to integrate into your automations.
+- **Dedicated Sensors**: Exposes preheat duration and optimal start time.
+- **Configuration Interface**: Setup via the Home Assistant user interface.
 
-## 📋 Prérequis
+## 📋 Prerequisites
 
-- Home Assistant 2023.1.0 ou supérieur
-- Versatile Thermostat (recommandé mais pas obligatoire)
-- Capteurs de température (intérieure et extérieure)
+- Home Assistant 2023.1.0 or higher
+- Versatile Thermostat (recommended but not mandatory)
+- Temperature sensors (indoor and outdoor)
 
 ## 🚀 Installation
 
-### Via HACS (recommandé)
+### Via HACS (recommended)
 
-1. Ouvrez HACS dans votre Home Assistant
-2. Allez dans "Intégrations"
-3. Cliquez sur les trois points en haut à droite et sélectionnez "Dépôts personnalisés"
-4. Ajoutez l'URL : `https://github.com/RastaChaum/SmartStarterVTherm`
-5. Sélectionnez la catégorie "Intégration"
-6. Cliquez sur "Télécharger"
-7. Redémarrez Home Assistant
+1. Open HACS in your Home Assistant.
+2. Go to "Integrations".
+3. Click on the three dots in the top right and select "Custom repositories".
+4. Add the URL: `https://github.com/RastaChaum/SmartStarterVTherm`
+5. Select the "Integration" category.
+6. Click "Download".
+7. Restart Home Assistant.
 
-### Installation manuelle
+### Manual Installation
 
-1. Copiez le dossier `custom_components/smart_starter_vtherm` dans votre dossier `custom_components` de Home Assistant
-2. Redémarrez Home Assistant
+1. Copy the `custom_components/smart_starter_vtherm` folder into your Home Assistant `custom_components` folder.
+2. Restart Home Assistant.
 
 ## ⚙️ Configuration
 
-### Via l'interface utilisateur
+### Initial Setup
 
-1. Allez dans **Configuration** → **Intégrations**
-2. Cliquez sur **+ Ajouter une intégration**
-3. Recherchez "Smart Starter VTherm"
-4. Suivez les instructions de configuration :
-   - **Nom** : Nom de votre instance
-   - **Capteur de température actuelle** (optionnel) : Entité de température de la pièce
-   - **Entité de température cible** (optionnel) : Thermostat ou input_number
-   - **Capteur de température extérieure** (optionnel) : Température extérieure
-   - **Pente thermique** : Vitesse de chauffe en °C/h (par défaut : 2.0)
+1. Go to **Configuration** → **Integrations**.
+2. Click **+ Add Integration**.
+3. Search for "Smart Starter VTherm".
+4. Fill in the required information:
+   - **Name**: Name of your instance.
+   - **VTherm Entity**: Your Versatile Thermostat climate entity.
+   - **Thermal Slope Entity**: The sensor exposing the thermal slope from VTherm (e.g., `sensor.vtherm_bedroom_slope`).
+   - **Current Temperature Sensor**: Room temperature sensor.
+   - **Current Humidity Sensor**: Room humidity sensor.
+   - **Target Temperature Entity**: The thermostat or input_number with target temperature.
+   - **Outdoor Temperature Sensor**: External temperature sensor.
+   - **Outdoor Humidity Sensor**: External humidity sensor.
+   - **Cloud Coverage Entity**: Cloud coverage sensor (from weather integration).
 
-## 📊 Utilisation
+### Modifying Configuration
 
-### Service : `smart_starter_vtherm.calculate_start_time`
+To change the entities after initial setup:
 
-Calcule l'heure de démarrage optimale pour atteindre la température cible.
+1. Go to **Configuration** → **Integrations**.
+2. Find your **Smart Starter VTherm** integration.
+3. Click on the **three dots** (⋮) menu.
+4. Select **"Configure"** or **"Options"**.
+5. Update the entities you want to change.
+6. Click **"Submit"**.
 
-**Paramètres :**
-- `current_temp` (requis) : Température actuelle en °C
-- `target_temp` (requis) : Température cible en °C
-- `outdoor_temp` (requis) : Température extérieure en °C
-- `target_time` (requis) : Heure cible (format : "2024-01-15 07:00:00")
-- `thermal_slope` (optionnel) : Pente thermique en °C/h (défaut : 2.0)
+The integration will automatically reload and start monitoring the new entities.
 
-**Exemple d'appel de service :**
+## 📊 Usage
+
+### Service: `smart_starter_vtherm.calculate_start_time`
+
+Calculates the optimal start time to reach the target temperature.
+
+**Parameters:**
+- `current_temp` (required): Current temperature in °C.
+- `target_temp` (required): Target temperature in °C.
+- `outdoor_temp` (required): Outdoor temperature in °C.
+- `target_time` (required): Target time (format: "YYYY-MM-DD HH:MM:SS").
+- `thermal_slope` (optional): Thermal slope in °C/h (default: 2.0).
+
+**Service Call Example:**
 
 ```yaml
 service: smart_starter_vtherm.calculate_start_time
@@ -75,21 +92,21 @@ data:
   thermal_slope: 2.5
 ```
 
-### Capteurs
+### Sensors
 
-L'intégration crée automatiquement deux capteurs :
+The integration automatically creates two sensors:
 
-1. **Preheat Duration** : Durée de préchauffage nécessaire (en minutes)
-2. **Start Time** : Heure de démarrage optimale (timestamp)
+1. **Preheat Duration**: Required preheat duration (in minutes).
+2. **Start Time**: Optimal start time (timestamp).
 
-### Exemple d'automatisation
+### Automation Example
 
 ```yaml
 automation:
-  - alias: "Démarrage intelligent du chauffage"
+  - alias: "Intelligent Heating Start"
     trigger:
       - platform: time_pattern
-        minutes: "/5"  # Vérifie toutes les 5 minutes
+        minutes: "/5"  # Checks every 5 minutes
     action:
       - service: smart_starter_vtherm.calculate_start_time
         data:
@@ -107,80 +124,137 @@ automation:
           hvac_mode: heat
 ```
 
-## 🧮 Logique de calcul
+## � Intelligent Calculation Logic (Online Machine Learning)
 
-Le calcul prend en compte :
+The Smart Starter VTherm goes beyond static calculations by employing an **online machine learning model** to dynamically learn and adapt to your specific environment. Instead of relying on a fixed "thermal slope," the system continuously refines its understanding of your heating system's behavior based on historical data and new observations from your Home Assistant installation.
 
-1. **Différence de température (ΔT)** : `target_temp - current_temp`
-2. **Facteur extérieur** : Impact de la température extérieure sur la vitesse de chauffe
-   - Formule : `outdoor_factor = 1 + (20 - outdoor_temp) * 0.05`
-   - À 20°C extérieur : facteur = 1.0 (pas d'impact)
-   - À 0°C extérieur : facteur = 2.0 (chauffe deux fois plus lente)
-   - À -10°C extérieur : facteur = 2.5
-3. **Pente thermique effective** : `effective_slope = thermal_slope / outdoor_factor`
-4. **Durée de préchauffage** : `duration = ΔT / effective_slope` (en heures, converti en minutes)
-5. **Heure de démarrage** : `start_time = target_time - duration`
+For each VTherm instance, the model learns:
 
-### Exemple de calcul
+1.  **Room-specific thermal characteristics**: How quickly a particular room heats up or cools down under various conditions.
+2.  **Impact of external factors**: The influence of outdoor temperature, humidity, and other environmental variables on heating efficiency.
+3.  **System inertia**: The time it takes for your heating system to respond and for the room temperature to change.
 
-**Conditions :**
-- Température actuelle : 18°C
-- Température cible : 21°C
-- Température extérieure : 5°C
-- Pente thermique : 2.0°C/h
-- Heure cible : 07:00
+### How it works:
 
-**Calcul :**
+-   **Data Collection**: The integration collects data points including current temperature, target temperature, outdoor temperature, heating duration, and actual time to reach the target.
+-   **Model Training**: An online machine learning algorithm (e.g., a regression model) is continuously trained and updated with this new data. This allows the model to adapt to changes in insulation, radiator performance, seasonal variations, and other dynamic factors.
+-   **Predictive Calculation**: When a preheat is required, the model uses its learned knowledge to predict the precise duration needed to reach the target temperature at the scheduled time. This prediction is highly personalized to your specific VTherm and room conditions.
+
+This approach ensures that the Smart Starter VTherm provides optimal preheating, minimizing energy waste while maximizing comfort, as it constantly learns and improves its accuracy over time.
+
+### Initial Calculation (Fallback/Cold Start)
+
+For initial setup or in cases where insufficient historical data is available, the system will use a simplified model based on:
+
+1.  **Temperature Difference (ΔT)**: `target_temp - current_temp`
+2.  **Outdoor Factor**: Impact of outdoor temperature on heating speed.
+    -   Formula: `outdoor_factor = 1 + (20 - outdoor_temp) * 0.05`
+    -   At 20°C outdoor: factor = 1.0 (no impact)
+    -   At 0°C outdoor: factor = 2.0 (heating twice as slow)
+    -   At -10°C outdoor: factor = 2.5
+3.  **Effective Thermal Slope**: `effective_slope = thermal_slope / outdoor_factor`
+4.  **Preheat Duration**: `duration = ΔT / effective_slope` (in hours, converted to minutes)
+5.  **Start Time**: `start_time = target_time - duration`
+
+As more data is collected, the online machine learning model will gradually take over, providing increasingly accurate and personalized preheating predictions.
+
+### Calculation Example (Initial/Fallback Logic)
+
+**Conditions:**
+- Current Temperature: 18°C
+- Target Temperature: 21°C
+- Outdoor Temperature: 5°C
+- Thermal Slope: 2.0°C/h
+- Target Time: 07:00
+
+**Calculation:**
 1. ΔT = 21 - 18 = 3°C
 2. outdoor_factor = 1 + (20 - 5) * 0.05 = 1.75
 3. effective_slope = 2.0 / 1.75 = 1.14°C/h
-4. duration = 3 / 1.14 = 2.63 heures = 158 minutes
+4. duration = 3 / 1.14 = 2.63 hours = 158 minutes
 5. start_time = 07:00 - 158 min = 04:22
 
-**Résultat : Démarrer le chauffage à 04:22 pour atteindre 21°C à 07:00**
+**Result: Start heating at 04:22 to reach 21°C at 07:00**
 
-## 🔧 Déterminer votre pente thermique
+## 🔧 Thermal Slope Configuration
 
-La pente thermique représente la vitesse à laquelle votre pièce se réchauffe. Pour la déterminer :
+### Option 1: Using Versatile Thermostat Entity
 
-1. Notez la température initiale de votre pièce
-2. Démarrez le chauffage à pleine puissance
-3. Après 1 heure, notez la nouvelle température
-4. La différence est votre pente thermique en °C/h
+If you're using [Versatile Thermostat](https://github.com/jmcollin78/versatile_thermostat), it already calculates and exposes the thermal slope as an entity. Simply:
 
-Exemple : 18°C → 20°C après 1h = pente de 2.0°C/h
+1. During setup, select **"Entity"** as the Thermal Slope Source.
+2. Choose the VTherm sensor that exposes the slope (typically named `sensor.<your_vtherm>_slope`).
 
-**Facteurs influençant la pente thermique :**
-- Isolation de la pièce
-- Puissance du radiateur
-- Volume de la pièce
-- Type de chauffage
+The integration will automatically use the real-time thermal slope calculated by VTherm, ensuring the most accurate preheating predictions.
 
-## 🐛 Dépannage
+### Option 2: Manual Configuration
 
-### Le service ne calcule pas correctement
+If you don't have Versatile Thermostat or prefer manual configuration:
 
-- Vérifiez que tous les paramètres sont corrects
-- Assurez-vous que la pente thermique correspond à votre installation
-- Consultez les logs Home Assistant pour plus de détails
+1. During setup, select **"Manual"** as the Thermal Slope Source.
+2. Enter your estimated thermal slope value.
 
-### Les capteurs ne se mettent pas à jour
+**To determine your thermal slope manually:**
 
-- Vérifiez que le service a été appelé au moins une fois
-- Les capteurs sont mis à jour lors de l'événement `smart_starter_vtherm_calculation_complete`
+1. Note your room's initial temperature.
+2. Start heating at full power.
+3. After 1 hour, note the new temperature.
+4. The difference is your thermal slope in °C/h.
+
+Example: 18°C → 20°C after 1h = 2.0°C/h slope.
+
+**Factors influencing thermal slope:**
+- Room insulation
+- Radiator power
+- Room volume
+- Heating type
+
+**Note:** Even with manual configuration, the online machine learning model will continuously adapt and improve its predictions based on your actual heating patterns.
+
+
+
+## 🔧 Determining Your Thermal Slope
+
+The thermal slope represents the rate at which your room heats up. To determine it:
+
+1. Note your room's initial temperature.
+2. Start heating at full power.
+3. After 1 hour, note the new temperature.
+4. The difference is your thermal slope in °C/h.
+
+Example: 18°C → 20°C after 1h = 2.0°C/h slope.
+
+**Factors influencing thermal slope:**
+- Room insulation
+- Radiator power
+- Room volume
+- Heating type
+
+## 🐛 Troubleshooting
+
+### Service does not calculate correctly
+
+- Verify all parameters are correct.
+- Ensure the thermal slope matches your installation.
+- Check Home Assistant logs for more details.
+
+### Sensors do not update
+
+- Verify the service has been called at least once.
+- Sensors are updated during the `smart_starter_vtherm_calculation_complete` event.
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! N'hésitez pas à :
-- Signaler des bugs
-- Proposer de nouvelles fonctionnalités
-- Soumettre des pull requests
+Contributions are welcome! Feel free to:
+- Report bugs
+- Suggest new features
+- Submit pull requests
 
-## 📝 Licence
+## 📝 License
 
-Ce projet est sous licence MIT.
+This project is licensed under the MIT License.
 
-## 👏 Remerciements
+## 👏 Acknowledgements
 
-- [Versatile Thermostat](https://github.com/jmcollin78/versatile_thermostat) pour l'inspiration
-- La communauté Home Assistant
+- [Versatile Thermostat](https://github.com/jmcollin78/versatile_thermostat) for inspiration
+- The Home Assistant community
