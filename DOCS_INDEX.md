@@ -17,6 +17,7 @@ If you want to **install and use** IHP:
 ### Releases & Updates
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
 - **[GitHub Releases](https://github.com/RastaChaum/Intelligent-Heating-Pilot/releases)** - Download specific versions with full release notes
+- **[AUTOMATED_RELEASE_GUIDE.md](AUTOMATED_RELEASE_GUIDE.md)** - Quick reference for maintainers (automated release process)
 
 ### Getting Help
 - **[Discussions](https://github.com/RastaChaum/Intelligent-Heating-Pilot/discussions)** - Ask questions and get community support
@@ -47,9 +48,22 @@ If you want to **contribute code or documentation**:
    - Best practices and anti-patterns
 
 ### Development Resources
-- **[.github/copilot-instructions.md](.github/copilot-instructions.md)** - Guidelines for AI-assisted development
+
+**🚀 Agent-Driven Development** (TDD + DDD):
+- **[.github/AGENT_QUICKSTART.md](.github/AGENT_QUICKSTART.md)** - ⭐ **5-minute quick start guide**
+- **[.github/AGENT_WORKFLOW.md](.github/AGENT_WORKFLOW.md)** - Complete orchestrated workflow
+- **[.github/agents/README.md](.github/agents/README.md)** - Agent system overview
+
+**🤖 Specialized Agents**:
+- **[testing_specialist.agent.md](.github/agents/testing_specialist.agent.md)** - TDD Red phase (write tests)
+- **[tech_lead.agent.md](.github/agents/tech_lead.agent.md)** - TDD Green + Refactor (implement code)
+- **[documentation_specialist.agent.md](.github/agents/documentation_specialist.agent.md)** - Update docs
+
+**📋 General Development**:
+- **[.github/copilot-instructions.md](.github/copilot-instructions.md)** - AI-assisted development guidelines
 - **[.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md)** - PR template with checklist
 - **[.github/RELEASE_TEMPLATE.md](.github/RELEASE_TEMPLATE.md)** - Release process and template
+- **[AUTOMATED_RELEASE_GUIDE.md](AUTOMATED_RELEASE_GUIDE.md)** - Automated releases quick reference
 
 ### Project Structure
 
@@ -102,8 +116,9 @@ intelligent-heating-pilot/
 → [Feature Request Template](https://github.com/RastaChaum/Intelligent-Heating-Pilot/issues/new?template=feature_request.md)
 
 #### ...contribute code
-→ [CONTRIBUTING.md](CONTRIBUTING.md) - Start here!
-→ [ARCHITECTURE.md](ARCHITECTURE.md) - Understand the design
+→ [.github/AGENT_WORKFLOW.md](.github/AGENT_WORKFLOW.md) - ⭐ **Start here!** TDD workflow with agents
+→ [CONTRIBUTING.md](CONTRIBUTING.md) - Development setup and standards
+→ [ARCHITECTURE.md](ARCHITECTURE.md) - Understand the DDD design
 
 #### ...create a release
 → [.github/RELEASE_TEMPLATE.md](.github/RELEASE_TEMPLATE.md) - Release process
