@@ -300,7 +300,7 @@ class HeatingApplicationService:
                 self._clear_anticipation_state()
             return
         
-        # Check if we're currently pre-heating and should revert
+        # Only if scheduler is enabled, check if we're currently pre-heating and should revert
         if self._is_preheating_active:
             # If anticipated start moved to the future (after now), we should stop pre-heating
             if anticipated_start > now and self._preheating_target_time == target_time:
@@ -312,15 +312,9 @@ class HeatingApplicationService:
                     self._last_scheduled_lhs or 0.0,
                     lhs
                 )
-                # Check scheduler is still enabled before calling cancel_action
-                if await self._scheduler_reader.is_scheduler_enabled(scheduler_entity_id):
-                    await self._scheduler_commander.cancel_action(scheduler_entity_id)
-                else:
-                    _LOGGER.warning(
-                        "Scheduler %s is now disabled. Cannot cancel action.",
-                        scheduler_entity_id
-                    )
-                self._clear_anticipation_state()
+
+                await self._scheduler_commander.cancel_action(scheduler_entity_id)
+
                 # Update tracking for new anticipated time
                 self._last_scheduled_time = anticipated_start
                 self._last_scheduled_lhs = lhs
@@ -333,17 +327,7 @@ class HeatingApplicationService:
                 self._preheating_target_time = None
                 self._active_scheduler_entity = None
                 return
-        
-        # Check for duplicate scheduling (only if not already pre-heating)
-        if (
-            not self._is_preheating_active
-            and self._last_scheduled_time == anticipated_start
-            and self._last_scheduled_lhs is not None
-            and abs(lhs - self._last_scheduled_lhs) < 0.05
-        ):
-            _LOGGER.debug("Already scheduled this anticipation, skipping duplicate")
-            return
-        
+       
         # Update tracking
         self._last_scheduled_time = anticipated_start
         self._last_scheduled_lhs = lhs
@@ -354,19 +338,12 @@ class HeatingApplicationService:
                 "Anticipated start %s is past, triggering pre-heating immediately",
                 anticipated_start.isoformat()
             )
-            # Check scheduler is enabled before calling run_action
-            if await self._scheduler_reader.is_scheduler_enabled(scheduler_entity_id):
-                # Use ONLY the scheduler's run_action - it will handle VTherm state correctly
-                # Respects scheduler conditions (skip_conditions=False in the adapter)
-                await self._scheduler_commander.run_action(target_time, scheduler_entity_id)
-                self._is_preheating_active = True
-                self._preheating_target_time = target_time
-                self._active_scheduler_entity = scheduler_entity_id
-            else:
-                _LOGGER.warning(
-                    "Scheduler %s is disabled. Cannot trigger pre-heating.",
-                    scheduler_entity_id
-                )
+            # Use ONLY the scheduler's run_action - it will handle VTherm state correctly
+            # Respects scheduler conditions (skip_conditions=False in the adapter)
+            await self._scheduler_commander.run_action(target_time, scheduler_entity_id)
+            self._is_preheating_active = True
+            self._preheating_target_time = target_time
+            self._active_scheduler_entity = scheduler_entity_id
             return
         
         # If both are in past, skip

@@ -122,7 +122,8 @@ class IntelligentHeatingPilotAnticipationTimeSensor(IntelligentHeatingPilotSenso
 
     def _handle_anticipation_result(self, data: dict) -> None:
         """Handle new anticipation result."""
-        # Check if this is a clear event
+        # Clear sensor values when scheduler is disabled or no timeslot is available  
+        # This sets the sensor to 'unknown' state and clears all attributes  
         if data.get("clear_values"):
             self._anticipated_start = None
             self._attributes = {}
