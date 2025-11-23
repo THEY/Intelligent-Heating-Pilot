@@ -48,11 +48,25 @@ To propose a new feature:
 
 ### Submitting Pull Requests
 
-1. Fork the repository
-2. Create a branch for your feature (`git checkout -b feature/my-new-feature`)
-3. Commit your changes (`git commit -m 'feat: add my new feature'`)
-4. Push to the branch (`git push origin feature/my-new-feature`)
-5. Open a Pull Request
+Before submitting code, please read our **[Branching Strategy](.github/BRANCHING_STRATEGY.md)** to understand our Git workflow.
+
+**Quick Summary**:
+1. **Always create branches from `main`**: `git checkout main && git pull && git checkout -b feature/issue-XX-description`
+2. **Target `integration` branch** for all feature/bug PRs
+3. **Use squash merge** when merging features into `integration` (one commit per feature)
+4. **Only admins merge** `integration` → `main` (for releases)
+
+**Detailed Steps**:
+1. Fork the repository (external contributors) or clone directly (internal)
+2. Create a branch from `main` for your feature (`git checkout -b feature/my-new-feature`)
+3. Develop with regular commits (`git commit -m 'feat: add my new feature'`)
+4. Push to your branch (`git push origin feature/my-new-feature`)
+5. Open a Pull Request **targeting `integration`** branch
+6. Use the appropriate PR template (feature/fix or release)
+7. Wait for review and address feedback
+8. PR will be **squash merged** into `integration` (one commit)
+
+See [.github/BRANCHING_STRATEGY.md](.github/BRANCHING_STRATEGY.md) for complete workflow documentation.
 
 ## 🏗️ Project Architecture
 
