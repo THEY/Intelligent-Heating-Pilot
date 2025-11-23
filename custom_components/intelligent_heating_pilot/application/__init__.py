@@ -318,6 +318,7 @@ class HeatingApplicationService:
                 # Update tracking for new anticipated time
                 self._last_scheduled_time = anticipated_start
                 self._last_scheduled_lhs = lhs
+                self._is_preheating_active = False
                 return
             
             # If we've reached the target time, mark pre-heating as complete
