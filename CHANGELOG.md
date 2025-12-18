@@ -13,6 +13,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.4.0] - 2025-12-18
+
+### Added
+- Heating cycle extraction service with REST endpoint and historical data adapters to build cycle lists suitable for learning ([#44](https://github.com/RastaChaum/Intelligent-Heating-Pilot/issues/44), [#23](https://github.com/RastaChaum/Intelligent-Heating-Pilot/issues/23)).
+- New user documentation set (Installation, Configuration, Troubleshooting, User Guide) and updated "How It Works" flow.
+
+### Changed
+- Learned Heating Slope now comes solely from detected heating cycles, using start/end temperatures and a delta threshold to ignore maintenance phases (addresses [#44](https://github.com/RastaChaum/Intelligent-Heating-Pilot/issues/44) and [#23](https://github.com/RastaChaum/Intelligent-Heating-Pilot/issues/23)).
+- Documentation refreshed with clearer LHS computation and cycle detection rules; README badge bumped to 0.4.0.
+
+### Fixed
+- Hardened adapters, decision strategies, and model storage with expanded unit/integration tests to improve stability.
+
 ## [0.3.1] - 2025-11-23
 
 ### Fixed
@@ -148,7 +161,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Links
 
-[Unreleased]: https://github.com/RastaChaum/Intelligent-Heating-Pilot/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/RastaChaum/Intelligent-Heating-Pilot/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/RastaChaum/Intelligent-Heating-Pilot/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/RastaChaum/Intelligent-Heating-Pilot/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/RastaChaum/Intelligent-Heating-Pilot/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/RastaChaum/Intelligent-Heating-Pilot/compare/v0.2.0...v0.2.1
