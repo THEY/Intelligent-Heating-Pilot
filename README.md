@@ -110,13 +110,11 @@ Settings → Devices & Services → + Add Integration
 
 Reset learning data if you modify your heating system:
 
-```yaml
-service: intelligent_heating_pilot.reset_learning
-```
+Choose your path below based on who you are:
 
 ---
 
-## 🤝 Contributing
+---
 
 Contributions welcome! Report bugs, suggest features, or submit code improvements.
 
