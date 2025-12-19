@@ -9,15 +9,15 @@ directly from Home Assistant recorder via HeatingCycleService.
 from __future__ import annotations
 
 import logging
-from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
-from homeassistant.util import dt as dt_util
 
 from ...domain.interfaces import IModelStorage
-from ...domain.value_objects import LHSCacheEntry
+
+if TYPE_CHECKING:
+    from typing import Any
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,55 +73,12 @@ class HAModelStorage(IModelStorage):
             _LOGGER.debug("Loaded model storage data (version %d)", STORAGE_VERSION)
         else:
             # Initialize with default structure
-            self._data = self._default_data()
+            self._data = {
+                "learned_heating_slope": DEFAULT_HEATING_SLOPE,
+            }
             _LOGGER.debug("Initialized new model storage with defaults")
         
         self._loaded = True
-
-    def _default_data(self) -> dict[str, Any]:
-        """Return default storage structure."""
-
-        return {
-            "learned_heating_slope": DEFAULT_HEATING_SLOPE,
-            "cached_global_lhs": None,
-            "cached_contextual_lhs": {},
-        }
-
-    @staticmethod
-    def _serialize_cached_entry(lhs: float, updated_at: datetime) -> dict[str, Any]:
-        """Serialize cached entry for storage."""
-
-        return {
-            "value": lhs,
-            "updated_at": dt_util.as_utc(updated_at).isoformat(),
-        }
-
-    def _deserialize_cached_entry(self, entry: Any, hour: int | None = None) -> LHSCacheEntry | None:
-        """Deserialize cached entry from storage."""
-
-        if not entry or not isinstance(entry, dict):
-            return None
-
-        value = entry.get("value")
-        updated_at_raw = entry.get("updated_at")
-
-        if value is None or updated_at_raw is None:
-            return None
-
-        parsed = dt_util.parse_datetime(updated_at_raw)
-        if parsed is None:
-            try:
-                parsed = datetime.fromisoformat(updated_at_raw)
-            except ValueError:
-                return None
-
-        parsed_utc = dt_util.as_utc(parsed)
-        try:
-            lhs_value = float(value)
-        except (TypeError, ValueError):
-            return None
-
-        return LHSCacheEntry(value=lhs_value, updated_at=parsed_utc, hour=hour)
     
     async def get_learned_heating_slope(self) -> float:
         """Get the current learned heating slope (LHS).
@@ -152,7 +109,7 @@ class HAModelStorage(IModelStorage):
         await self._ensure_loaded()
         
         _LOGGER.info("Clearing all learned slope history")
-        self._data = self._default_data()
+        self._data["learned_heating_slope"] = DEFAULT_HEATING_SLOPE
         
         await self._store.async_save(self._data)
 
