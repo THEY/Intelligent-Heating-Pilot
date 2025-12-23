@@ -1,6 +1,6 @@
 """Constants for the Intelligent Heating Pilot integration."""
 
-VERSION = "0.4.2"
+VERSION = "0.4.3"
 DOMAIN = "intelligent_heating_pilot"
 # Configuration keys
 CONF_NAME = "name"
