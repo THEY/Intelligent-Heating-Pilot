@@ -135,7 +135,7 @@ class LHSCalculationService:
                 return start_time <= target_time < end_time
             
             # Handle multi-day cycles (crosses midnight)
-            # Cycle is active if target_hour is after start OR before end
+            # Cycle is active if target_hour is after start AND before end
             return target_time >= start_time and target_time < end_time
         
         active_cycles = [c for c in heating_cycles if is_active_at_hour(c)]
