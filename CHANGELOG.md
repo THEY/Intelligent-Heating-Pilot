@@ -13,6 +13,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+## [0.4.3] - 2025-12-23
+
+### Added
+- **Configurable Heating Cycle Detection Parameters** - New UI configuration options to fine-tune cycle detection and Learning Heating Slope (LHS) calculation for different heating systems
+  - **Temperature Detection Threshold** (default: 0.2°C): Sensitivity for cycle start/end detection. Lower values increase detection sensitivity for heating systems with subtle temperature changes
+  - **Cycle Split Duration** (default: None/disabled): Optional splitting of long heating cycles into sub-cycles for ML training data augmentation
+  - **Minimum Cycle Duration** (default: 5 min): Filters out short micro-cycles caused by heating system switching noise
+  - **Maximum Cycle Duration** (default: 300 min / 5h): Filters out abnormally long cycles that may indicate sensor malfunctions or system errors
+  - All parameters configurable via integration UI (both initial setup and options flow)
+  - Full English and French translations
+  - Backward compatible with sensible defaults
+
+### Changed
+- **HeatingCycleService** now accepts configuration parameters instead of using hardcoded values, enabling per-installation customization
+- **REST API** for cycle extraction now uses configured parameters from the coordinator instead of hardcoded defaults
+- **Documentation Updates**:
+  - Updated CONFIGURATION.md with new advanced configuration section for cycle detection parameters
+  - Updated USER_GUIDE.md with guidance on tuning parameters for different heating systems
+  - Improved consistency across all user-facing documentation
+
+### Fixed
+- Heating cycle detection now adaptable to different heating system characteristics (intermittent heating, micro-cutoffs, etc.)
+
 ## [0.4.2] - 2025-12-19
 
 ### Added
@@ -193,6 +216,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Release Links
 
 [Unreleased]: https://github.com/RastaChaum/Intelligent-Heating-Pilot/compare/v0.4.2...HEAD
+[0.4.3]: https://github.com/RastaChaum/Intelligent-Heating-Pilot/compare/v0.4.2...v0.4.3
 [0.4.2]: https://github.com/RastaChaum/Intelligent-Heating-Pilot/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/RastaChaum/Intelligent-Heating-Pilot/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/RastaChaum/Intelligent-Heating-Pilot/compare/v0.3.1...v0.4.0
