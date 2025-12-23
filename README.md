@@ -1,7 +1,7 @@
 # Intelligent Heating Pilot (IHP)
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
-![Version](https://img.shields.io/badge/version-0.4.2-blue)
+![Version](https://img.shields.io/badge/version-0.4.3-blue)
 ![Status](https://img.shields.io/badge/status-beta-yellow)
 
 > **The Adaptive Brain for Versatile Thermostat**
@@ -57,10 +57,11 @@ Settings → Devices & Services → + Add Integration
 
 ## 🎯 Features
 
-### Current (v0.4.1)
+### Current (v0.4.3)
 
 - ✅ **Smart Pre-heating** - Automatically calculates optimal start time
 - ✅ **Cycle Detection** - Learns from real heating cycles, not VTherm slopes
+- ✅ **Configurable Detection Parameters** - Fine-tune cycle detection for your heating system
 - ✅ **Time-Contextual Learning** - Different heating speeds by time of day
 - ✅ **Incremental Cache** - Reduces HA database load for long-term learning
 - ✅ **VTherm v8+ Compatible** - Works with latest Versatile Thermostat

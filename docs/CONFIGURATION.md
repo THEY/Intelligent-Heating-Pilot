@@ -98,6 +98,72 @@ The integration will reload automatically.
 - 🧠 **Learning History**: More retention = better slope calculations
 - 💾 **Storage**: Longer retention uses slightly more disk space (minimal)
 
+### Heating Cycle Detection Parameters
+
+**New in v0.4.3+**: Fine-tune how IHP detects and processes heating cycles for optimal Learning Heating Slope calculation.
+
+#### Temperature Detection Threshold
+
+| Setting | Default | Range | Description |
+|---------|---------|-------|-------------|
+| **Temperature Detection Threshold** | 0.2°C | 0.1 - 1.0°C | Temperature difference to detect cycle start/end |
+
+**When to Adjust:**
+- 🔻 **Lower (0.1°C)**: For heating systems with subtle temperature changes or high-precision thermostats
+- 🔺 **Higher (0.3-0.5°C)**: For systems with frequent micro-cutoffs or intermittent heating
+- ⚠️ **Too low**: May detect false cycles from sensor noise
+- ⚠️ **Too high**: May miss short heating cycles
+
+#### Cycle Duration Filters
+
+| Setting | Default | Range | Description |
+|---------|---------|-------|-------------|
+| **Minimum Cycle Duration** | 5 minutes | 1 - 30 min | Shortest valid heating cycle |
+| **Maximum Cycle Duration** | 300 minutes (5h) | 60 - 720 min | Longest valid heating cycle |
+
+**When to Adjust:**
+
+**Minimum Duration:**
+- 🔻 **Lower (1-3 min)**: For fast-response heating systems (electric radiators, heat pumps)
+- 🔺 **Higher (10-15 min)**: For systems with frequent switching noise
+- ⚠️ **Too low**: Includes micro-cycles (noise) in learning data
+- ⚠️ **Too high**: May exclude legitimate short heating cycles
+
+**Maximum Duration:**
+- 🔻 **Lower (120-180 min)**: For well-insulated homes or powerful heating systems
+- 🔺 **Higher (360-720 min)**: For poorly insulated spaces or weak heating systems
+- ⚠️ **Too low**: May exclude long but valid heating cycles
+- ⚠️ **Too high**: May include abnormal cycles from sensor malfunctions
+
+#### Cycle Split Duration (Advanced)
+
+| Setting | Default | Range | Description |
+|---------|---------|-------|-------------|
+| **Cycle Split Duration** | None (disabled) | 15 - 120 min | Split long cycles into sub-cycles for ML |
+
+**When to Enable:**
+- ✅ **Planning to use ML mode** (future feature): Increases training data samples
+- ✅ **Very long heating cycles** (>2 hours): Provides more granular learning
+- ❌ **Simple mode only**: Keep disabled for simplicity
+
+**Recommended Values:**
+- 30 minutes: Good balance for most systems
+- 60 minutes: For very long heating cycles
+- Disabled (None): For simple mode users
+
+---
+
+### How to Modify Advanced Settings
+
+1. Go to **Settings** → **Devices & Services**
+2. Find **Intelligent Heating Pilot** integration
+3. Click **⋮ (three dots)** → **Reconfigure**
+4. Scroll to **Advanced Configuration** section
+5. Adjust parameters based on your heating system
+6. Click **Submit**
+
+**Tip**: Start with defaults and only adjust if you notice issues with cycle detection in the logs.
+
 **Recommended Values:**
 - **Minimum**: 7 days (matches typical HA recorder retention)
 - **Default**: 30 days (optimal balance of learning quality and storage)
