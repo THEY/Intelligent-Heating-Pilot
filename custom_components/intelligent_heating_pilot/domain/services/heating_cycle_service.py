@@ -24,7 +24,7 @@ class HeatingCycleService(IHeatingCycleService):
     def __init__(
         self,
         temp_delta_threshold: float = 0.2,
-        cycle_split_duration_minutes: int | None = None,
+        cycle_split_duration_minutes: int = 0,
         min_cycle_duration_minutes: int = 5,
         max_cycle_duration_minutes: int = 300,
     ) -> None:
@@ -37,8 +37,8 @@ class HeatingCycleService(IHeatingCycleService):
         Args:
             temp_delta_threshold: The temperature difference (target - current) in °C
                 above which heating is considered active to start a cycle.
-            cycle_split_duration_minutes: Optional duration in minutes to split long heating
-                cycles into smaller sub-cycles for granular analysis. If None, cycles are not split.
+            cycle_split_duration_minutes: Duration in minutes to split long heating
+                cycles into smaller sub-cycles for granular analysis. If 0, cycles are not split.
             min_cycle_duration_minutes: Minimum duration for a valid heating cycle.
             max_cycle_duration_minutes: Maximum duration for a single heating cycle (before splitting).
         """
@@ -65,7 +65,7 @@ class HeatingCycleService(IHeatingCycleService):
         history_data_set: HistoricalDataSet,
         start_time: datetime,
         end_time: datetime,
-        cycle_split_duration_minutes: int | None = None,
+        cycle_split_duration_minutes: int = 0,
     ) -> list[HeatingCycle]:
         """Extract heating cycles from a HistoricalDataSet within a given time range.
         
@@ -76,8 +76,8 @@ class HeatingCycleService(IHeatingCycleService):
             history_data_set: A HistoricalDataSet containing all necessary raw sensor data.
             start_time: The start of the time range for cycle extraction.
             end_time: The end of the time range for cycle extraction.
-            cycle_split_duration_minutes: Optional duration in minutes to split long cycles
-                into smaller sub-cycles for granular analysis.
+            cycle_split_duration_minutes: Duration in minutes to split long cycles
+                into smaller sub-cycles for granular analysis. If 0, no splitting.
             
         Returns:
             A list of HeatingCycle value objects.
@@ -90,8 +90,8 @@ class HeatingCycleService(IHeatingCycleService):
         # Validate critical data availability
         self._validate_critical_data(history_data_set)
         
-        # Use provided cycle_split_duration_minutes if specified, otherwise use instance default
-        split_duration = cycle_split_duration_minutes if (cycle_split_duration_minutes is not None and cycle_split_duration_minutes > 0) else self._cycle_split_duration_minutes
+        # Use provided cycle_split_duration_minutes if specified (>0), otherwise use instance default
+        split_duration = cycle_split_duration_minutes if cycle_split_duration_minutes > 0 else self._cycle_split_duration_minutes
         
         # Récupérer les données d'historique triées par timestamp
         heating_state_history = sorted(
@@ -333,7 +333,7 @@ class HeatingCycleService(IHeatingCycleService):
         )
 
         # If splitting is enabled, return sub-cycles (used for ML augmentation).
-        if split_duration_minutes is not None and split_duration_minutes > 0 and duration_minutes > split_duration_minutes:
+        if split_duration_minutes > 0 and duration_minutes > split_duration_minutes:
             return self._split_into_cycles(device_id, start_time, end_time, start_indoor_temp, end_indoor_temp, target_temp, history_data_set, split_duration_minutes)
 
         return [cycle]
@@ -347,10 +347,10 @@ class HeatingCycleService(IHeatingCycleService):
         end_indoor_temp: float,
         target_temp: float,
         history_data_set: HistoricalDataSet,
-        split_duration_minutes: int | None = None,
+        split_duration_minutes: int = 0,
     ) -> list[HeatingCycle]:
         """Splits a long heating cycle into smaller sub-cycles and returns them."""
-        if split_duration_minutes is None:  # Should not happen if called correctly
+        if split_duration_minutes <= 0:  # No splitting
             return []
 
         # Ensure temperatures are available before attempting numeric operations

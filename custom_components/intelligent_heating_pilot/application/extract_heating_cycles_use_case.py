@@ -56,7 +56,7 @@ class ExtractHeatingCyclesUseCase:
             device_id: The device ID to extract cycles for
             start_time: Start of the time range for extraction
             end_time: End of the time range for extraction
-            cycle_split_duration_minutes: Optional duration to split long cycles
+            cycle_split_duration_minutes: Duration to split long cycles (0=disabled)
             
         Returns:
             List of extracted HeatingCycle value objects
