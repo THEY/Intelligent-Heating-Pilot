@@ -146,6 +146,19 @@ Check Home Assistant logs if:
 
 The cache automatically refreshes every 24 hours to include new cycles and removes old cycles beyond the retention period.
 
+### Q: How do I tune cycle detection for my heating system?
+
+**A:** **New in v0.4.3+**: You can now configure how IHP detects heating cycles in the integration settings:
+
+**Common scenarios:**
+
+- **Intermittent heating** (on/off frequently): Increase temperature threshold to 0.3-0.5°C
+- **Fast-response systems** (heat pumps, electric): Lower minimum cycle duration to 1-3 minutes
+- **Long heating cycles** (poorly insulated): Increase maximum cycle duration to 360-720 minutes
+- **Micro-cutoffs/noise**: Increase minimum cycle duration to 10-15 minutes
+
+See [Configuration Guide](CONFIGURATION.md#heating-cycle-detection-parameters) for detailed parameter descriptions.
+
 ### Q: Can I use IHP with multiple thermostats?
 
 **A:** Yes! Create multiple IHP instances (one per thermostat). Each learns independently.
@@ -218,4 +231,4 @@ Rest assured, you can go on vacation without any additional configuration!
 
 **Happy heating!** 🔥
 
-_Intelligent Heating Pilot v0.3.0 - Documentation Last Updated: December 2025_
+_Intelligent Heating Pilot v0.4.3 - Documentation Last Updated: December 2025_
