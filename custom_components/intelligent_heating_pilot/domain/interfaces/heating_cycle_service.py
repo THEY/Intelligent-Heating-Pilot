@@ -18,7 +18,7 @@ class IHeatingCycleService(ABC):
         history_data_set: HistoricalDataSet,
         start_time: datetime,
         end_time: datetime,
-        cycle_split_duration_minutes: int | None = None,
+        cycle_split_duration_minutes: int = 0,
     ) -> list[HeatingCycle]:
         """Extract heating cycles from a HistoricalDataSet within a given time range.
         
@@ -27,8 +27,8 @@ class IHeatingCycleService(ABC):
             history_data_set: A HistoricalDataSet containing all necessary raw sensor data.
             start_time: The start of the time range for cycle extraction.
             end_time: The end of the time range for cycle extraction.
-            cycle_split_duration_minutes: Optional duration in minutes to split long cycles
-                into smaller sub-cycles for granular analysis.
+            cycle_split_duration_minutes: Duration in minutes to split long cycles
+                into smaller sub-cycles for granular analysis. If 0, no splitting.
             
         Returns:
             A list of HeatingCycle value objects.

@@ -96,12 +96,11 @@ class IntelligentHeatingPilotCoordinator:
             self._get_config_value(CONF_TEMP_DELTA_THRESHOLD) 
             or DEFAULT_TEMP_DELTA_THRESHOLD
         )
-        self._cycle_split_duration_minutes = self._get_config_value(CONF_CYCLE_SPLIT_DURATION_MINUTES)
-        if self._cycle_split_duration_minutes is not None:
-            self._cycle_split_duration_minutes = int(self._cycle_split_duration_minutes)
-            # Treat 0 as disabled (None)
-            if self._cycle_split_duration_minutes == 0:
-                self._cycle_split_duration_minutes = None
+        self._cycle_split_duration_minutes = int(
+            self._get_config_value(CONF_CYCLE_SPLIT_DURATION_MINUTES) 
+            or DEFAULT_CYCLE_SPLIT_DURATION_MINUTES
+        )
+        # 0 means disabled (no splitting)
         self._min_cycle_duration_minutes = int(
             self._get_config_value(CONF_MIN_CYCLE_DURATION_MINUTES) 
             or DEFAULT_MIN_CYCLE_DURATION_MINUTES

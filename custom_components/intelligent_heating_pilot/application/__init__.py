@@ -58,7 +58,7 @@ class HeatingApplicationService:
         history_lookback_days: int | None = None,
         decision_mode: str = DEFAULT_DECISION_MODE,
         temp_delta_threshold: float | None = None,
-        cycle_split_duration_minutes: int | None = None,
+        cycle_split_duration_minutes: int = 0,
         min_cycle_duration_minutes: int | None = None,
         max_cycle_duration_minutes: int | None = None,
     ) -> None:
@@ -76,7 +76,7 @@ class HeatingApplicationService:
                 to extract heating cycles (default: DEFAULT_DATA_RETENTION_DAYS)
             decision_mode: Decision mode ('simple' or 'ml')
             temp_delta_threshold: Temperature threshold for cycle detection (°C)
-            cycle_split_duration_minutes: Duration for splitting long cycles (minutes)
+            cycle_split_duration_minutes: Duration for splitting long cycles (minutes, 0=disabled)
             min_cycle_duration_minutes: Minimum cycle duration (minutes)
             max_cycle_duration_minutes: Maximum cycle duration (minutes)
         """
