@@ -91,7 +91,7 @@ class HeatingCycleService(IHeatingCycleService):
         self._validate_critical_data(history_data_set)
         
         # Use provided cycle_split_duration_minutes if specified (>0), otherwise use instance default
-        split_duration = cycle_split_duration_minutes if cycle_split_duration_minutes > 0 else self._cycle_split_duration_minutes
+        split_duration = cycle_split_duration_minutes if (cycle_split_duration_minutes is not None and cycle_split_duration_minutes > 0) else self._cycle_split_duration_minutes
         
         # Récupérer les données d'historique triées par timestamp
         heating_state_history = sorted(
