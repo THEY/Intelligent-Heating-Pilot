@@ -83,9 +83,6 @@ If you want to **install and use** IHP:
 - **[GitHub Releases](https://github.com/RastaChaum/Intelligent-Heating-Pilot/releases)** - Download specific versions with full release notes
 - **[AUTOMATED_RELEASE_GUIDE.md](AUTOMATED_RELEASE_GUIDE.md)** - Quick reference for maintainers (automated release process)
 
-### Customization
-- **[docs/LOGO_SUBMISSION.md](docs/LOGO_SUBMISSION.md)** - How to add IHP logo to Home Assistant Integrations page
-
 ### Getting Help
 - **[Discussions](https://github.com/RastaChaum/Intelligent-Heating-Pilot/discussions)** - Ask questions and get community support
 - **[Bug Reports](https://github.com/RastaChaum/Intelligent-Heating-Pilot/issues/new?template=bug_report.md)** - Report issues
