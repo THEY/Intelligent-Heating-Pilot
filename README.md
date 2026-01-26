@@ -123,10 +123,6 @@ Contributions welcome! Report bugs, suggest features, or submit code improvement
 
 For technical architecture: [Architecture Documentation](ARCHITECTURE.md)
 
-### 🎨 Integration Logo
-
-Want to see the IHP logo on your Home Assistant Integrations page? See the [Logo Submission Guide](docs/LOGO_SUBMISSION.md) to learn how to add it to the Home Assistant Brands repository.
-
 ---
 
 ## 📝 License
