@@ -19,6 +19,8 @@ CONF_CYCLE_SPLIT_DURATION_MINUTES = "cycle_split_duration_minutes"
 CONF_MIN_CYCLE_DURATION_MINUTES = "min_cycle_duration_minutes"
 CONF_MAX_CYCLE_DURATION_MINUTES = "max_cycle_duration_minutes"
 CONF_MAX_HEATING_SLOPE = "max_heating_slope"
+CONF_MANUAL_SLOPE_MODE = "manual_slope_mode"
+CONF_MANUAL_SLOPE_VALUE = "manual_slope_value"
 
 # Legacy keys (kept for backward compatibility if needed)
 CONF_THERMAL_SLOPE_ENTITY = "thermal_slope_entity"
@@ -46,6 +48,8 @@ DEFAULT_CYCLE_SPLIT_DURATION_MINUTES = 0  # 0 = No splitting (disabled)
 DEFAULT_MIN_CYCLE_DURATION_MINUTES = 5  # Minimum 5 minutes
 DEFAULT_MAX_CYCLE_DURATION_MINUTES = 300  # Maximum 5 hours
 DEFAULT_MAX_HEATING_SLOPE = 10.0  # Maximum heating slope in °C/h (caps outlier cycles)
+DEFAULT_MANUAL_SLOPE_MODE = False  # Use manual slope instead of calculating
+DEFAULT_MANUAL_SLOPE_VALUE = 2.0  # Manual heating slope in °C/h (when manual mode is enabled)
 
 # Service names
 SERVICE_CALCULATE_START_TIME = "calculate_start_time"

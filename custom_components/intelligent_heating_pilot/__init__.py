@@ -26,6 +26,8 @@ from .const import (
     CONF_HUMIDITY_OUT_ENTITY,
     CONF_DATA_RETENTION_DAYS,
     CONF_LHS_RETENTION_DAYS,
+    CONF_MANUAL_SLOPE_MODE,
+    CONF_MANUAL_SLOPE_VALUE,
     CONF_MAX_CYCLE_DURATION_MINUTES,
     CONF_MAX_HEATING_SLOPE,
     CONF_MIN_CYCLE_DURATION_MINUTES,
@@ -35,6 +37,8 @@ from .const import (
     DECISION_MODE_SIMPLE,
     DEFAULT_CYCLE_SPLIT_DURATION_MINUTES,
     DEFAULT_DATA_RETENTION_DAYS,
+    DEFAULT_MANUAL_SLOPE_MODE,
+    DEFAULT_MANUAL_SLOPE_VALUE,
     DEFAULT_MAX_CYCLE_DURATION_MINUTES,
     DEFAULT_MAX_HEATING_SLOPE,
     DEFAULT_MIN_CYCLE_DURATION_MINUTES,
@@ -115,6 +119,14 @@ class IntelligentHeatingPilotCoordinator:
             self._get_config_value(CONF_MAX_HEATING_SLOPE) 
             or DEFAULT_MAX_HEATING_SLOPE
         )
+        manual_mode_val = self._get_config_value(CONF_MANUAL_SLOPE_MODE)
+        self._manual_slope_mode = bool(
+            manual_mode_val if manual_mode_val is not None else DEFAULT_MANUAL_SLOPE_MODE
+        )
+        self._manual_slope_value = float(
+            self._get_config_value(CONF_MANUAL_SLOPE_VALUE) 
+            or DEFAULT_MANUAL_SLOPE_VALUE
+        )
         
         # Infrastructure adapters
         self._model_storage: HAModelStorage | None = None
@@ -183,6 +195,8 @@ class IntelligentHeatingPilotCoordinator:
             min_cycle_duration_minutes=self._min_cycle_duration_minutes,
             max_cycle_duration_minutes=self._max_cycle_duration_minutes,
             max_heating_slope=self._max_heating_slope,
+            manual_slope_mode=self._manual_slope_mode,
+            manual_slope_value=self._manual_slope_value,
         )
         
         # Create event bridge

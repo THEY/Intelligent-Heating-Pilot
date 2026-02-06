@@ -547,3 +547,58 @@ class TestAdditionalScenarios:
 
         # Still only one trigger
         assert mock_adapters["scheduler_commander"].run_action.call_count == 1
+
+
+class TestManualSlopeMode:
+    """Test suite for manual slope mode feature."""
+    
+    @pytest.mark.asyncio
+    async def test_manual_slope_mode_returns_manual_value(self, mock_adapters):
+        """Test that manual slope mode returns the configured manual value."""
+        manual_slope = 3.5
+        app_service = HeatingApplicationService(
+            scheduler_reader=mock_adapters["scheduler_reader"],
+            model_storage=mock_adapters["model_storage"],
+            scheduler_commander=mock_adapters["scheduler_commander"],
+            climate_commander=mock_adapters["climate_commander"],
+            environment_reader=mock_adapters["environment_reader"],
+            manual_slope_mode=True,
+            manual_slope_value=manual_slope,
+        )
+        
+        target_time = make_aware(datetime(2025, 1, 15, 6, 30, 0))
+        lhs = await app_service._get_contextual_lhs(target_time)
+        
+        assert lhs == manual_slope
+        # Verify that cycle extraction was NOT called (manual mode skips calculation)
+        # Since manual mode returns early, _extract_cycles_from_recorder should not be called
+        # We can verify this by checking that model_storage.get_learned_heating_slope was not called
+        # (which would be called in the fallback path)
+        mock_adapters["model_storage"].get_learned_heating_slope.assert_not_called()
+    
+    @pytest.mark.asyncio
+    async def test_manual_slope_mode_disabled_calculates_normally(self, mock_adapters):
+        """Test that when manual mode is disabled, LHS is calculated normally."""
+        app_service = HeatingApplicationService(
+            scheduler_reader=mock_adapters["scheduler_reader"],
+            model_storage=mock_adapters["model_storage"],
+            scheduler_commander=mock_adapters["scheduler_commander"],
+            climate_commander=mock_adapters["climate_commander"],
+            environment_reader=mock_adapters["environment_reader"],
+            manual_slope_mode=False,
+            manual_slope_value=5.0,  # This should be ignored
+        )
+        
+        target_time = make_aware(datetime(2025, 1, 15, 6, 30, 0))
+        
+        # Mock that no cycles are found, so it falls back to global LHS
+        mock_adapters["model_storage"].get_learned_heating_slope.return_value = 2.0
+        
+        # Mock cycle extraction to return empty list
+        with patch.object(app_service, '_extract_cycles_from_recorder', new_callable=AsyncMock) as mock_extract:
+            mock_extract.return_value = []
+            lhs = await app_service._get_contextual_lhs(target_time)
+        
+        # Should use global LHS (2.0), not manual value (5.0)
+        assert lhs == 2.0
+        assert lhs != 5.0
