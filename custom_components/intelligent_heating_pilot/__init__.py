@@ -310,9 +310,23 @@ class IntelligentHeatingPilotCoordinator:
     
     def _get_config_value(self, key: str) -> Any:
         """Get config value with options override support."""
-        if isinstance(self.config.options, dict) and key in self.config.options:
-            return self.config.options[key]
-        return self.config.data.get(key)
+        # Check options first (user-configurable values)
+        if isinstance(self.config.options, dict):
+            if key in self.config.options:
+                _LOGGER.debug("Found %s in options: %s", key, self.config.options[key])
+                return self.config.options[key]
+            else:
+                _LOGGER.debug("Key %s not in options (keys: %s)", key, list(self.config.options.keys()) if self.config.options else "None")
+        else:
+            _LOGGER.debug("Config options is not a dict: %s (type: %s)", self.config.options, type(self.config.options))
+        
+        # Fallback to data (initial setup values)
+        value = self.config.data.get(key)
+        if value is not None:
+            _LOGGER.debug("Found %s in data: %s", key, value)
+        else:
+            _LOGGER.debug("Key %s not in data (keys: %s)", key, list(self.config.data.keys()) if isinstance(self.config.data, dict) else "None")
+        return value
     
     def _get_scheduler_entities(self) -> list[str]:
         """Get scheduler entities with robust type handling."""
