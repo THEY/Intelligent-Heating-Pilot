@@ -18,6 +18,8 @@ from .const import (
     CONF_HUMIDITY_IN_ENTITY,
     CONF_HUMIDITY_OUT_ENTITY,
     CONF_LHS_RETENTION_DAYS,
+    CONF_MANUAL_SLOPE_MODE,
+    CONF_MANUAL_SLOPE_VALUE,
     CONF_MAX_CYCLE_DURATION_MINUTES,
     CONF_MAX_HEATING_SLOPE,
     CONF_MIN_CYCLE_DURATION_MINUTES,
@@ -27,6 +29,8 @@ from .const import (
     CONF_VTHERM_ENTITY,
     DEFAULT_CYCLE_SPLIT_DURATION_MINUTES,
     DEFAULT_LHS_RETENTION_DAYS,
+    DEFAULT_MANUAL_SLOPE_MODE,
+    DEFAULT_MANUAL_SLOPE_VALUE,
     DEFAULT_MAX_CYCLE_DURATION_MINUTES,
     DEFAULT_MAX_HEATING_SLOPE,
     DEFAULT_MIN_CYCLE_DURATION_MINUTES,
@@ -220,6 +224,24 @@ class IntelligentHeatingPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN
                         min=1.0,
                         max=50.0,
                         step=0.5,
+                        unit_of_measurement="°C/h",
+                        mode=selector.NumberSelectorMode.BOX
+                    )
+                ),
+                vol.Optional(
+                    CONF_MANUAL_SLOPE_MODE,
+                    default=DEFAULT_MANUAL_SLOPE_MODE
+                ): selector.BooleanSelector(
+                    selector.BooleanSelectorConfig()
+                ),
+                vol.Optional(
+                    CONF_MANUAL_SLOPE_VALUE,
+                    default=DEFAULT_MANUAL_SLOPE_VALUE
+                ): selector.NumberSelector(
+                    selector.NumberSelectorConfig(
+                        min=0.1,
+                        max=50.0,
+                        step=0.1,
                         unit_of_measurement="°C/h",
                         mode=selector.NumberSelectorMode.BOX
                     )
@@ -470,6 +492,24 @@ class IntelligentHeatingPilotOptionsFlow(config_entries.OptionsFlow):
                 min=1.0,
                 max=50.0,
                 step=0.5,
+                unit_of_measurement="°C/h",
+                mode=selector.NumberSelectorMode.BOX
+            )
+        )
+        schema_dict[vol.Optional(
+            CONF_MANUAL_SLOPE_MODE,
+            default=_opt_or_data(CONF_MANUAL_SLOPE_MODE, DEFAULT_MANUAL_SLOPE_MODE)
+        )] = selector.BooleanSelector(
+            selector.BooleanSelectorConfig()
+        )
+        schema_dict[vol.Optional(
+            CONF_MANUAL_SLOPE_VALUE,
+            default=_opt_or_data(CONF_MANUAL_SLOPE_VALUE, DEFAULT_MANUAL_SLOPE_VALUE)
+        )] = selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0.1,
+                max=50.0,
+                step=0.1,
                 unit_of_measurement="°C/h",
                 mode=selector.NumberSelectorMode.BOX
             )

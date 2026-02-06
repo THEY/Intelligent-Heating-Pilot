@@ -62,6 +62,8 @@ class HeatingApplicationService:
         min_cycle_duration_minutes: int | None = None,
         max_cycle_duration_minutes: int | None = None,
         max_heating_slope: float | None = None,
+        manual_slope_mode: bool = False,
+        manual_slope_value: float = 2.0,
     ) -> None:
         """Initialize the application service.
         
@@ -81,6 +83,8 @@ class HeatingApplicationService:
             min_cycle_duration_minutes: Minimum cycle duration (minutes)
             max_cycle_duration_minutes: Maximum cycle duration (minutes)
             max_heating_slope: Maximum heating slope in °C/h to cap outlier cycles (default: 10.0)
+            manual_slope_mode: If True, use manual_slope_value instead of calculating LHS
+            manual_slope_value: Manual heating slope in °C/h (used when manual_slope_mode is True)
         """
         self._scheduler_reader = scheduler_reader
         self._model_storage = model_storage
@@ -89,6 +93,8 @@ class HeatingApplicationService:
         self._environment_reader = environment_reader
         self._cycle_cache = cycle_cache
         self._prediction_service = PredictionService()
+        self._manual_slope_mode = manual_slope_mode
+        self._manual_slope_value = manual_slope_value
         
         # Create LHSCalculationService with max_heating_slope (None = no cap)
         self._lhs_calculation_service = LHSCalculationService(max_heating_slope=max_heating_slope)
@@ -161,12 +167,22 @@ class HeatingApplicationService:
         
         Without cache, falls back to direct recorder extraction.
         
+        If manual_slope_mode is enabled, returns the manual slope value instead.
+        
         Args:
             target_time: Target schedule time
             
         Returns:
-            Contextual LHS in °C/h or global LHS as fallback
+            Contextual LHS in °C/h or global LHS as fallback, or manual slope if manual mode enabled
         """
+        # If manual mode is enabled, return the manual value
+        if self._manual_slope_mode:
+            _LOGGER.info(
+                "Manual slope mode enabled, using manual slope: %.2f°C/h",
+                self._manual_slope_value
+            )
+            return self._manual_slope_value
+        
         target_hour = target_time.hour
         _LOGGER.debug(
             "Computing contextual LHS for hour %02d using HeatingCycles%s",
