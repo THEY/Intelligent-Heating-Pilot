@@ -312,32 +312,32 @@ class IntelligentHeatingPilotCoordinator:
         """Get config value with options override support.
         
         Home Assistant's config.options can be a dict or mappingproxy (immutable dict-like),
-        so we use .get() which works on both.
+        both support .get() method, so we use it directly.
         """
         # Check options first (user-configurable values)
-        # mappingproxy supports .get() method, so use it directly
+        # mappingproxy and dict both support .get()
         options = getattr(self.config, 'options', None)
         if options is not None:
-            # Use .get() which works on both dict and mappingproxy
-            # Check if key exists first to avoid returning None for missing keys
-            if hasattr(options, '__contains__') and key in options:
-                value = options.get(key)
-                _LOGGER.debug("Found %s in options: %s", key, value)
-                return value
-            elif hasattr(options, 'get'):
-                # Try .get() anyway - it returns None if key doesn't exist
+            try:
+                # Use .get() which works on both dict and mappingproxy
                 value = options.get(key)
                 if value is not None:
                     _LOGGER.debug("Found %s in options: %s", key, value)
                     return value
+            except (AttributeError, TypeError):
+                # Fallback if .get() doesn't exist (shouldn't happen)
+                pass
         
         # Fallback to data (initial setup values)
         data = getattr(self.config, 'data', None)
-        if data is not None and hasattr(data, 'get'):
-            value = data.get(key)
-            if value is not None:
-                _LOGGER.debug("Found %s in data: %s", key, value)
-                return value
+        if data is not None:
+            try:
+                value = data.get(key)
+                if value is not None:
+                    _LOGGER.debug("Found %s in data: %s", key, value)
+                    return value
+            except (AttributeError, TypeError):
+                pass
         
         _LOGGER.debug("Key %s not found in options or data", key)
         return None
