@@ -309,24 +309,41 @@ class IntelligentHeatingPilotCoordinator:
     # Configuration helpers
     
     def _get_config_value(self, key: str) -> Any:
-        """Get config value with options override support."""
+        """Get config value with options override support.
+        
+        Home Assistant's config.options can be a dict or mappingproxy (immutable dict-like),
+        so we use .get() which works on both.
+        """
         # Check options first (user-configurable values)
-        if isinstance(self.config.options, dict):
-            if key in self.config.options:
-                _LOGGER.debug("Found %s in options: %s", key, self.config.options[key])
-                return self.config.options[key]
-            else:
-                _LOGGER.debug("Key %s not in options (keys: %s)", key, list(self.config.options.keys()) if self.config.options else "None")
-        else:
-            _LOGGER.debug("Config options is not a dict: %s (type: %s)", self.config.options, type(self.config.options))
+        # Use getattr with default None to handle cases where options might not exist
+        options = getattr(self.config, 'options', None)
+        if options is not None:
+            # Use .get() which works on both dict and mappingproxy
+            if hasattr(options, 'get'):
+                value = options.get(key)
+                if value is not None:
+                    _LOGGER.debug("Found %s in options: %s", key, value)
+                    return value
+                _LOGGER.debug("Key %s not in options (keys: %s)", key, list(options.keys()) if hasattr(options, 'keys') else "unknown")
+            elif hasattr(options, '__getitem__'):
+                # Fallback for dict-like objects without .get()
+                try:
+                    value = options[key]
+                    _LOGGER.debug("Found %s in options: %s", key, value)
+                    return value
+                except KeyError:
+                    _LOGGER.debug("Key %s not in options", key)
         
         # Fallback to data (initial setup values)
-        value = self.config.data.get(key)
-        if value is not None:
-            _LOGGER.debug("Found %s in data: %s", key, value)
-        else:
-            _LOGGER.debug("Key %s not in data (keys: %s)", key, list(self.config.data.keys()) if isinstance(self.config.data, dict) else "None")
-        return value
+        data = getattr(self.config, 'data', None)
+        if data is not None and hasattr(data, 'get'):
+            value = data.get(key)
+            if value is not None:
+                _LOGGER.debug("Found %s in data: %s", key, value)
+                return value
+        
+        _LOGGER.debug("Key %s not found in options or data", key)
+        return None
     
     def _get_scheduler_entities(self) -> list[str]:
         """Get scheduler entities with robust type handling."""
