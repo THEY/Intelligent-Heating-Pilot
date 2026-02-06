@@ -315,24 +315,21 @@ class IntelligentHeatingPilotCoordinator:
         so we use .get() which works on both.
         """
         # Check options first (user-configurable values)
-        # Use getattr with default None to handle cases where options might not exist
+        # mappingproxy supports .get() method, so use it directly
         options = getattr(self.config, 'options', None)
         if options is not None:
             # Use .get() which works on both dict and mappingproxy
-            if hasattr(options, 'get'):
+            # Check if key exists first to avoid returning None for missing keys
+            if hasattr(options, '__contains__') and key in options:
+                value = options.get(key)
+                _LOGGER.debug("Found %s in options: %s", key, value)
+                return value
+            elif hasattr(options, 'get'):
+                # Try .get() anyway - it returns None if key doesn't exist
                 value = options.get(key)
                 if value is not None:
                     _LOGGER.debug("Found %s in options: %s", key, value)
                     return value
-                _LOGGER.debug("Key %s not in options (keys: %s)", key, list(options.keys()) if hasattr(options, 'keys') else "unknown")
-            elif hasattr(options, '__getitem__'):
-                # Fallback for dict-like objects without .get()
-                try:
-                    value = options[key]
-                    _LOGGER.debug("Found %s in options: %s", key, value)
-                    return value
-                except KeyError:
-                    _LOGGER.debug("Key %s not in options", key)
         
         # Fallback to data (initial setup values)
         data = getattr(self.config, 'data', None)
