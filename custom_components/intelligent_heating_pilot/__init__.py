@@ -115,9 +115,14 @@ class IntelligentHeatingPilotCoordinator:
             self._get_config_value(CONF_MAX_CYCLE_DURATION_MINUTES) 
             or DEFAULT_MAX_CYCLE_DURATION_MINUTES
         )
+        max_slope_val = self._get_config_value(CONF_MAX_HEATING_SLOPE)
         self._max_heating_slope = float(
-            self._get_config_value(CONF_MAX_HEATING_SLOPE) 
-            or DEFAULT_MAX_HEATING_SLOPE
+            max_slope_val if max_slope_val is not None else DEFAULT_MAX_HEATING_SLOPE
+        )
+        _LOGGER.debug(
+            "Loaded max_heating_slope config: %s -> %.2f°C/h",
+            max_slope_val,
+            self._max_heating_slope
         )
         manual_mode_val = self._get_config_value(CONF_MANUAL_SLOPE_MODE)
         self._manual_slope_mode = bool(
