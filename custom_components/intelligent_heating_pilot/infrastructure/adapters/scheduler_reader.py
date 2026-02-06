@@ -73,17 +73,15 @@ class HASchedulerReader(ISchedulerReader):
             state = self._hass.states.get(entity_id)
             if not state:
                 # Use debug level if HA is still starting up, warning otherwise
-                device_name = get_entity_name(self._hass, entity_id)
                 if self._hass.is_running:
-                    _LOGGER.warning("[%s] Scheduler entity not found", device_name)
+                    _LOGGER.warning("[%s] Scheduler entity not found", entity_id)
                 else:
-                    _LOGGER.debug("[%s] Scheduler entity not yet available (HA starting)", device_name)
+                    _LOGGER.debug("[%s] Scheduler entity not yet available (HA starting)", entity_id)
                 continue
             
             # Skip disabled schedulers (state is "off")
             if state.state == "off":
-                device_name = get_entity_name(self._hass, entity_id)
-                _LOGGER.debug("[%s] Scheduler is disabled (state: off), skipping", device_name)
+                _LOGGER.debug("[%s] Scheduler is disabled (state: off), skipping", entity_id)
                 continue
             
             # Extract next trigger time and target temperature

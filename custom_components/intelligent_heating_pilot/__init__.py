@@ -27,6 +27,7 @@ from .const import (
     CONF_DATA_RETENTION_DAYS,
     CONF_LHS_RETENTION_DAYS,
     CONF_MAX_CYCLE_DURATION_MINUTES,
+    DEFAULT_MAX_HEATING_SLOPE,
     CONF_MIN_CYCLE_DURATION_MINUTES,
     CONF_SCHEDULER_ENTITIES,
     CONF_TEMP_DELTA_THRESHOLD,
@@ -35,6 +36,7 @@ from .const import (
     DEFAULT_CYCLE_SPLIT_DURATION_MINUTES,
     DEFAULT_DATA_RETENTION_DAYS,
     DEFAULT_MAX_CYCLE_DURATION_MINUTES,
+    DEFAULT_MAX_HEATING_SLOPE,
     DEFAULT_MIN_CYCLE_DURATION_MINUTES,
     DEFAULT_TEMP_DELTA_THRESHOLD,
     DOMAIN,
@@ -109,6 +111,10 @@ class IntelligentHeatingPilotCoordinator:
             self._get_config_value(CONF_MAX_CYCLE_DURATION_MINUTES) 
             or DEFAULT_MAX_CYCLE_DURATION_MINUTES
         )
+        self._max_heating_slope = float(
+            self._get_config_value(CONF_MAX_HEATING_SLOPE) 
+            or DEFAULT_MAX_HEATING_SLOPE
+        )
         
         # Infrastructure adapters
         self._model_storage: HAModelStorage | None = None
@@ -176,6 +182,7 @@ class IntelligentHeatingPilotCoordinator:
             cycle_split_duration_minutes=self._cycle_split_duration_minutes,
             min_cycle_duration_minutes=self._min_cycle_duration_minutes,
             max_cycle_duration_minutes=self._max_cycle_duration_minutes,
+            max_heating_slope=self._max_heating_slope,
         )
         
         # Create event bridge
