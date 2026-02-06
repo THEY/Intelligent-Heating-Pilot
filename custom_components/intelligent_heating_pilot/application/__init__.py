@@ -61,6 +61,7 @@ class HeatingApplicationService:
         cycle_split_duration_minutes: int = 0,
         min_cycle_duration_minutes: int | None = None,
         max_cycle_duration_minutes: int | None = None,
+        max_heating_slope: float | None = None,
     ) -> None:
         """Initialize the application service.
         
@@ -79,6 +80,7 @@ class HeatingApplicationService:
             cycle_split_duration_minutes: Duration for splitting long cycles (minutes, 0=disabled)
             min_cycle_duration_minutes: Minimum cycle duration (minutes)
             max_cycle_duration_minutes: Maximum cycle duration (minutes)
+            max_heating_slope: Maximum heating slope in °C/h to cap outlier cycles (default: 10.0)
         """
         self._scheduler_reader = scheduler_reader
         self._model_storage = model_storage
@@ -87,7 +89,9 @@ class HeatingApplicationService:
         self._environment_reader = environment_reader
         self._cycle_cache = cycle_cache
         self._prediction_service = PredictionService()
-        self._lhs_calculation_service = LHSCalculationService()
+        
+        # Create LHSCalculationService with max_heating_slope (None = no cap)
+        self._lhs_calculation_service = LHSCalculationService(max_heating_slope=max_heating_slope)
         
         # Create HeatingCycleService with configured parameters
         from ..const import (

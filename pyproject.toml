@@ -6,6 +6,7 @@ authors = ["RastaChaum"]
 license = "MIT"
 readme = "README.md"
 packages = []                                                # No packaging; HA loads custom_components directly
+package-mode = false
 
 # Python constraint (align with HA core supported version)
 [tool.poetry.dependencies]
@@ -24,7 +25,7 @@ pytest-homeassistant-custom-component = "^0.13.0"
 ruff = "^0.6.0"
 mypy = "^1.10"
 types-setuptools = "^68.0.0"
-pysqlite3-binary = "^0.5.4.post2"
+
 
 [tool.poetry.group.test.dependencies]
 coverage = "^7.6"

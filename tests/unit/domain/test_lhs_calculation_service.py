@@ -233,6 +233,116 @@ class TestLHSCalculationService(unittest.TestCase):
         
         # Average = (1.0 + 2.0 + 3.0) / 3 = 2.0
         self.assertAlmostEqual(result, 2.0, places=2)
+    
+    def test_max_heating_slope_caps_final_result_global(self):
+        """Test that max_heating_slope caps the final calculated result in global LHS calculation."""
+        # Create service with max_heating_slope of 5.0
+        service = LHSCalculationService(max_heating_slope=5.0)
+        
+        base_time = datetime(2025, 12, 18, 14, 0, 0, tzinfo=timezone.utc)
+        
+        cycles = [
+            self._create_cycle(base_time, duration_hours=1.0, temp_increase=2.0),      # 2.0°C/h
+            self._create_cycle(base_time + timedelta(hours=2), duration_hours=1.0, temp_increase=3.0),  # 3.0°C/h
+            self._create_cycle(base_time + timedelta(hours=4), duration_hours=1.0, temp_increase=15.0), # 15.0°C/h
+        ]
+        
+        result = service.calculate_global_lhs(cycles)
+        
+        # Average is (2.0 + 3.0 + 15.0) / 3 = 6.67, but should be capped to 5.0
+        self.assertAlmostEqual(result, 5.0, places=2)
+    
+    def test_max_heating_slope_caps_final_result_contextual(self):
+        """Test that max_heating_slope caps the final calculated result in contextual LHS calculation."""
+        # Create service with max_heating_slope of 5.0
+        service = LHSCalculationService(max_heating_slope=5.0)
+        
+        base_time = datetime(2025, 12, 18, 14, 0, 0, tzinfo=timezone.utc)
+        
+        cycles = [
+            # All active at 15:00
+            self._create_cycle(base_time, duration_hours=2.0, temp_increase=4.0),     # 2.0°C/h
+            self._create_cycle(base_time, duration_hours=2.0, temp_increase=6.0),     # 3.0°C/h
+            self._create_cycle(base_time, duration_hours=2.0, temp_increase=30.0),    # 15.0°C/h
+        ]
+        
+        result = service.calculate_contextual_lhs(cycles, target_hour=15)
+        
+        # Average is (2.0 + 3.0 + 15.0) / 3 = 6.67, but should be capped to 5.0
+        self.assertAlmostEqual(result, 5.0, places=2)
+    
+    def test_max_heating_slope_caps_final_result_simple_average(self):
+        """Test that max_heating_slope caps the final calculated result in calculate_simple_average."""
+        # Create service with max_heating_slope of 5.0
+        service = LHSCalculationService(max_heating_slope=5.0)
+        
+        slope_values = [2.0, 3.0, 15.0, 20.0]
+        
+        result = service.calculate_simple_average(slope_values)
+        
+        # Average is (2.0 + 3.0 + 15.0 + 20.0) / 4 = 10.0, but should be capped to 5.0
+        self.assertAlmostEqual(result, 5.0, places=2)
+    
+    def test_max_heating_slope_none_no_cap(self):
+        """Test that when max_heating_slope is None, no capping is applied."""
+        service = LHSCalculationService(max_heating_slope=None)
+        
+        base_time = datetime(2025, 12, 18, 14, 0, 0, tzinfo=timezone.utc)
+        
+        cycles = [
+            self._create_cycle(base_time, duration_hours=1.0, temp_increase=2.0),      # 2.0°C/h
+            self._create_cycle(base_time + timedelta(hours=2), duration_hours=1.0, temp_increase=15.0),  # 15.0°C/h
+        ]
+        
+        result = service.calculate_global_lhs(cycles)
+        
+        # Average should be (2.0 + 15.0) / 2 = 8.5 (no cap)
+        self.assertAlmostEqual(result, 8.5, places=2)
+    
+    def test_max_heating_slope_no_cap_when_below_limit(self):
+        """Test that final result below max_heating_slope is not affected."""
+        service = LHSCalculationService(max_heating_slope=10.0)
+        
+        base_time = datetime(2025, 12, 18, 14, 0, 0, tzinfo=timezone.utc)
+        
+        cycles = [
+            self._create_cycle(base_time, duration_hours=1.0, temp_increase=2.0),      # 2.0°C/h
+            self._create_cycle(base_time + timedelta(hours=2), duration_hours=1.0, temp_increase=3.0),  # 3.0°C/h
+            self._create_cycle(base_time + timedelta(hours=4), duration_hours=1.0, temp_increase=4.0),  # 4.0°C/h
+        ]
+        
+        result = service.calculate_global_lhs(cycles)
+        
+        # Average is (2.0 + 3.0 + 4.0) / 3 = 3.0, which is below 10.0, so no cap applied
+        self.assertAlmostEqual(result, 3.0, places=2)
+    
+    def test_max_heating_slope_caps_when_above_limit(self):
+        """Test that final result above max_heating_slope is capped."""
+        service = LHSCalculationService(max_heating_slope=5.0)
+        
+        base_time = datetime(2025, 12, 18, 14, 0, 0, tzinfo=timezone.utc)
+        
+        cycles = [
+            self._create_cycle(base_time, duration_hours=1.0, temp_increase=4.0),      # 4.0°C/h
+            self._create_cycle(base_time + timedelta(hours=2), duration_hours=1.0, temp_increase=5.0),  # 5.0°C/h
+            self._create_cycle(base_time + timedelta(hours=4), duration_hours=1.0, temp_increase=6.0),  # 6.0°C/h
+        ]
+        
+        result = service.calculate_global_lhs(cycles)
+        
+        # Average is (4.0 + 5.0 + 6.0) / 3 = 5.0, which equals max, so result is 5.0
+        self.assertAlmostEqual(result, 5.0, places=2)
+        
+        # Test with higher average
+        cycles2 = [
+            self._create_cycle(base_time, duration_hours=1.0, temp_increase=6.0),      # 6.0°C/h
+            self._create_cycle(base_time + timedelta(hours=2), duration_hours=1.0, temp_increase=7.0),  # 7.0°C/h
+        ]
+        
+        result2 = service.calculate_global_lhs(cycles2)
+        
+        # Average is (6.0 + 7.0) / 2 = 6.5, but should be capped to 5.0
+        self.assertAlmostEqual(result2, 5.0, places=2)
 
 
 if __name__ == "__main__":
