@@ -35,6 +35,10 @@ class LHSCalculationService:
             max_heating_slope: Maximum heating slope in °C/h to cap final result (None = no cap)
         """
         self._max_heating_slope = max_heating_slope
+        if max_heating_slope is not None:
+            _LOGGER.debug("LHSCalculationService initialized with max_heating_slope=%.2f°C/h", max_heating_slope)
+        else:
+            _LOGGER.debug("LHSCalculationService initialized without max_heating_slope cap")
     
     def _apply_max_cap(self, calculated_slope: float) -> float:
         """Apply maximum cap to calculated slope if configured.
@@ -46,7 +50,15 @@ class LHSCalculationService:
             The minimum of calculated_slope and max_heating_slope (if configured), otherwise calculated_slope
         """
         if self._max_heating_slope is not None:
-            return min(calculated_slope, self._max_heating_slope)
+            capped = min(calculated_slope, self._max_heating_slope)
+            if capped != calculated_slope:
+                _LOGGER.debug(
+                    "Applied max cap: %.2f°C/h -> %.2f°C/h (max=%.2f°C/h)",
+                    calculated_slope,
+                    capped,
+                    self._max_heating_slope
+                )
+            return capped
         return calculated_slope
     
     def calculate_simple_average(self, slope_values: list[float]) -> float:
