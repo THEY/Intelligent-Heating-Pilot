@@ -134,29 +134,72 @@ class HAEnvironmentReader:
         Reads the max_capacity_heat attribute which represents the Heat Rate
         calculated by Versatile Thermostat's auto TPI algorithm.
         
+        The attribute is exposed on the Auto TPI sensor entity (not the climate
+        entity). The sensor entity ID follows the pattern:
+        {climate_entity_id}_auto_tpi_learning
+        
+        Falls back to reading from climate entity if sensor entity not found.
+        
         Returns:
             Heat Rate in °C/h, or None if not available
         """
+        # Try reading from Auto TPI sensor entity first (where it's actually exposed)
+        # Sensor entity ID pattern: {climate_entity_id}_auto_tpi_learning
+        # e.g., climate.office_heater -> sensor.office_heater_auto_tpi_learning
+        climate_domain, climate_entity = self._vtherm_entity_id.split(".", 1)
+        sensor_entity_id = f"sensor.{climate_entity}_auto_tpi_learning"
+        
+        sensor_state = self._hass.states.get(sensor_entity_id)
+        if sensor_state and sensor_state.attributes:
+            heat_rate_raw = sensor_state.attributes.get(VTHERM_ATTR_MAX_CAPACITY_HEAT)
+            if heat_rate_raw is not None:
+                try:
+                    heat_rate = float(heat_rate_raw)
+                    if heat_rate > 0:
+                        _LOGGER.debug(
+                            "[%s] Found Heat Rate %.3f°C/h from sensor %s",
+                            self._device_name,
+                            heat_rate,
+                            sensor_entity_id
+                        )
+                        return heat_rate
+                except (ValueError, TypeError) as e:
+                    _LOGGER.debug(
+                        "[%s] Invalid Heat Rate value from sensor %s: %s",
+                        self._device_name,
+                        sensor_entity_id,
+                        heat_rate_raw,
+                        exc_info=e
+                    )
+        
+        # Fallback: try reading from climate entity (for backward compatibility)
         vtherm_state = self._hass.states.get(self._vtherm_entity_id)
-        if not vtherm_state:
-            _LOGGER.debug("[%s] VTherm entity not found for Heat Rate", self._device_name)
-            return None
+        if vtherm_state:
+            heat_rate_raw = get_vtherm_attribute(vtherm_state, VTHERM_ATTR_MAX_CAPACITY_HEAT)
+            if heat_rate_raw is not None:
+                try:
+                    heat_rate = float(heat_rate_raw)
+                    if heat_rate > 0:
+                        _LOGGER.debug(
+                            "[%s] Found Heat Rate %.3f°C/h from climate entity",
+                            self._device_name,
+                            heat_rate
+                        )
+                        return heat_rate
+                except (ValueError, TypeError) as e:
+                    _LOGGER.debug(
+                        "[%s] Invalid Heat Rate value from climate entity: %s",
+                        self._device_name,
+                        heat_rate_raw,
+                        exc_info=e
+                    )
         
-        # Use v8.0.0+ compatible attribute access
-        heat_rate_raw = get_vtherm_attribute(vtherm_state, VTHERM_ATTR_MAX_CAPACITY_HEAT)
-        if heat_rate_raw is None:
-            _LOGGER.debug("[%s] max_capacity_heat attribute not available", self._device_name)
-            return None
-        
-        try:
-            heat_rate = float(heat_rate_raw)
-            if heat_rate <= 0:
-                _LOGGER.debug("[%s] Invalid Heat Rate value: %.3f (must be > 0)", self._device_name, heat_rate)
-                return None
-            return heat_rate
-        except (ValueError, TypeError) as e:
-            _LOGGER.warning("[%s] Invalid Heat Rate value: %s", self._device_name, heat_rate_raw, exc_info=e)
-            return None
+        _LOGGER.debug(
+            "[%s] max_capacity_heat attribute not available on sensor %s or climate entity",
+            self._device_name,
+            sensor_entity_id
+        )
+        return None
     
     def is_heating_active(self) -> bool:
         """Check if heating is currently active.

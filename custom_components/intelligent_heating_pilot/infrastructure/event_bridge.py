@@ -60,8 +60,18 @@ class HAEventBridge:
         self._monitored_entity_ids = monitored_entity_ids or []
         self._entry_id = entry_id
         
+        # Construct Auto TPI sensor entity ID (where max_capacity_heat is exposed)
+        # Pattern: sensor.{climate_entity_id}_auto_tpi_learning
+        climate_domain, climate_entity = vtherm_entity_id.split(".", 1)
+        self._vtherm_auto_tpi_sensor_id = f"sensor.{climate_entity}_auto_tpi_learning"
+        
         # Track all entities that should trigger updates
-        self._tracked_entities = [vtherm_entity_id] + scheduler_entity_ids + self._monitored_entity_ids
+        # Include both climate entity and Auto TPI sensor entity
+        self._tracked_entities = (
+            [vtherm_entity_id, self._vtherm_auto_tpi_sensor_id] +
+            scheduler_entity_ids +
+            self._monitored_entity_ids
+        )
         
         # Listener cleanup callbacks
         self._listeners: list = []
@@ -82,6 +92,9 @@ class HAEventBridge:
             # VTherm-specific handling for slope learning
             if entity_id == self._vtherm_entity_id:
                 self._handle_vtherm_change(event)
+            elif entity_id == self._vtherm_auto_tpi_sensor_id:
+                # Auto TPI sensor entity changed - check for Heat Rate updates
+                self._handle_auto_tpi_sensor_change(event)
             else:
                 # Other entities just trigger recalculation
                 _LOGGER.debug("Entity %s changed, triggering update", entity_id)
@@ -142,6 +155,43 @@ class HAEventBridge:
             )
         
         if temp_changed or heat_rate_changed:
+            # Trigger recalculation and publish to sensors
+            self._hass.async_create_task(
+                self._recalculate_and_publish()
+            )
+    
+    def _handle_auto_tpi_sensor_change(self, event: Event[EventStateChangedData]) -> None:
+        """Handle Auto TPI sensor entity changes (Heat Rate updates).
+        
+        This sensor entity exposes max_capacity_heat attribute. When it changes,
+        trigger recalculation to use the updated Heat Rate.
+        
+        Args:
+            event: State change event
+        """
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
+        
+        if not old_state or not new_state:
+            return
+        
+        # Extract Heat Rate changes
+        old_heat_rate = None
+        new_heat_rate = None
+        
+        if old_state.attributes:
+            old_heat_rate = old_state.attributes.get(VTHERM_ATTR_MAX_CAPACITY_HEAT)
+        if new_state.attributes:
+            new_heat_rate = new_state.attributes.get(VTHERM_ATTR_MAX_CAPACITY_HEAT)
+        
+        heat_rate_changed = old_heat_rate != new_heat_rate
+        
+        if heat_rate_changed:
+            _LOGGER.info(
+                "VTherm Auto TPI Heat Rate changed: %s -> %s °C/h",
+                old_heat_rate,
+                new_heat_rate
+            )
             # Trigger recalculation and publish to sensors
             self._hass.async_create_task(
                 self._recalculate_and_publish()
