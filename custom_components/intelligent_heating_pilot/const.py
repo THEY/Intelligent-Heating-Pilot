@@ -21,6 +21,7 @@ CONF_MAX_CYCLE_DURATION_MINUTES = "max_cycle_duration_minutes"
 CONF_MAX_HEATING_SLOPE = "max_heating_slope"
 CONF_MANUAL_SLOPE_MODE = "manual_slope_mode"
 CONF_MANUAL_SLOPE_VALUE = "manual_slope_value"
+CONF_USE_VTHERM_HEAT_RATE = "use_vtherm_heat_rate"
 
 # Legacy keys (kept for backward compatibility if needed)
 CONF_THERMAL_SLOPE_ENTITY = "thermal_slope_entity"
@@ -50,6 +51,7 @@ DEFAULT_MAX_CYCLE_DURATION_MINUTES = 300  # Maximum 5 hours
 DEFAULT_MAX_HEATING_SLOPE = 10.0  # Maximum heating slope in °C/h (caps outlier cycles)
 DEFAULT_MANUAL_SLOPE_MODE = False  # Use manual slope instead of calculating
 DEFAULT_MANUAL_SLOPE_VALUE = 2.0  # Manual heating slope in °C/h (when manual mode is enabled)
+DEFAULT_USE_VTHERM_HEAT_RATE = False  # Use VTherm's auto TPI Heat Rate instead of calculating
 
 # Service names
 SERVICE_CALCULATE_START_TIME = "calculate_start_time"
@@ -76,6 +78,7 @@ ATTR_MAX_HEATING_SLOPE = "max_heating_slope"
 VTHERM_ATTR_SLOPE = "temperature_slope"
 VTHERM_ATTR_TEMPERATURE = "temperature"
 VTHERM_ATTR_CURRENT_TEMPERATURE = "ema_temp"  # Actual room temperature (exponential moving average)
+VTHERM_ATTR_MAX_CAPACITY_HEAT = "max_capacity_heat"  # Auto TPI Heat Rate (°C/h)
 
 # Scheduler specific attributes
 SCHEDULER_ATTR_NEXT_SCHEDULE = "next_entries"

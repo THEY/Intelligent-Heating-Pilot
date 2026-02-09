@@ -64,6 +64,7 @@ class HeatingApplicationService:
         max_heating_slope: float | None = None,
         manual_slope_mode: bool = False,
         manual_slope_value: float = 2.0,
+        use_vtherm_heat_rate: bool = False,
     ) -> None:
         """Initialize the application service.
         
@@ -85,6 +86,7 @@ class HeatingApplicationService:
             max_heating_slope: Maximum heating slope in °C/h to cap outlier cycles (default: 10.0)
             manual_slope_mode: If True, use manual_slope_value instead of calculating LHS
             manual_slope_value: Manual heating slope in °C/h (used when manual_slope_mode is True)
+            use_vtherm_heat_rate: If True, use VTherm's auto TPI Heat Rate instead of calculating LHS
         """
         self._scheduler_reader = scheduler_reader
         self._model_storage = model_storage
@@ -95,6 +97,7 @@ class HeatingApplicationService:
         self._prediction_service = PredictionService()
         self._manual_slope_mode = manual_slope_mode
         self._manual_slope_value = manual_slope_value
+        self._use_vtherm_heat_rate = use_vtherm_heat_rate
         
         # Create LHSCalculationService with max_heating_slope (None = no cap)
         self._lhs_calculation_service = LHSCalculationService(max_heating_slope=max_heating_slope)
@@ -167,15 +170,32 @@ class HeatingApplicationService:
         
         Without cache, falls back to direct recorder extraction.
         
-        If manual_slope_mode is enabled, returns the manual slope value instead.
+        Priority order:
+        1. VTherm Heat Rate (if use_vtherm_heat_rate is enabled)
+        2. Manual slope (if manual_slope_mode is enabled)
+        3. Calculated slope (default)
         
         Args:
             target_time: Target schedule time
             
         Returns:
-            Contextual LHS in °C/h or global LHS as fallback, or manual slope if manual mode enabled
+            Contextual LHS in °C/h or global LHS as fallback, or VTherm Heat Rate/manual slope if enabled
         """
-        # If manual mode is enabled, return the manual value
+        # Priority 1: If VTherm Heat Rate is enabled, use it
+        if self._use_vtherm_heat_rate:
+            vtherm_heat_rate = self._environment_reader.get_vtherm_heat_rate()
+            if vtherm_heat_rate is not None:
+                _LOGGER.info(
+                    "Using VTherm Heat Rate: %.2f°C/h",
+                    vtherm_heat_rate
+                )
+                return vtherm_heat_rate
+            else:
+                _LOGGER.warning(
+                    "VTherm Heat Rate requested but not available, falling back to calculated/manual slope"
+                )
+        
+        # Priority 2: If manual mode is enabled, return the manual value
         if self._manual_slope_mode:
             _LOGGER.info(
                 "Manual slope mode enabled, using manual slope: %.2f°C/h",

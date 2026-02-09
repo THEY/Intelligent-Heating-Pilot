@@ -33,6 +33,7 @@ from .const import (
     CONF_MIN_CYCLE_DURATION_MINUTES,
     CONF_SCHEDULER_ENTITIES,
     CONF_TEMP_DELTA_THRESHOLD,
+    CONF_USE_VTHERM_HEAT_RATE,
     CONF_VTHERM_ENTITY,
     DECISION_MODE_SIMPLE,
     DEFAULT_CYCLE_SPLIT_DURATION_MINUTES,
@@ -43,6 +44,7 @@ from .const import (
     DEFAULT_MAX_HEATING_SLOPE,
     DEFAULT_MIN_CYCLE_DURATION_MINUTES,
     DEFAULT_TEMP_DELTA_THRESHOLD,
+    DEFAULT_USE_VTHERM_HEAT_RATE,
     DOMAIN,
 )
 from .infrastructure.adapters import (
@@ -132,6 +134,15 @@ class IntelligentHeatingPilotCoordinator:
             self._get_config_value(CONF_MANUAL_SLOPE_VALUE) 
             or DEFAULT_MANUAL_SLOPE_VALUE
         )
+        use_vtherm_heat_rate_val = self._get_config_value(CONF_USE_VTHERM_HEAT_RATE)
+        self._use_vtherm_heat_rate = bool(
+            use_vtherm_heat_rate_val if use_vtherm_heat_rate_val is not None else DEFAULT_USE_VTHERM_HEAT_RATE
+        )
+        _LOGGER.debug(
+            "Loaded use_vtherm_heat_rate config: %s -> %s",
+            use_vtherm_heat_rate_val,
+            self._use_vtherm_heat_rate
+        )
         
         # Infrastructure adapters
         self._model_storage: HAModelStorage | None = None
@@ -202,6 +213,7 @@ class IntelligentHeatingPilotCoordinator:
             max_heating_slope=self._max_heating_slope,
             manual_slope_mode=self._manual_slope_mode,
             manual_slope_value=self._manual_slope_value,
+            use_vtherm_heat_rate=self._use_vtherm_heat_rate,
         )
         
         # Create event bridge
