@@ -22,6 +22,7 @@ CONF_MAX_HEATING_SLOPE = "max_heating_slope"
 CONF_MANUAL_SLOPE_MODE = "manual_slope_mode"
 CONF_MANUAL_SLOPE_VALUE = "manual_slope_value"
 CONF_USE_VTHERM_HEAT_RATE = "use_vtherm_heat_rate"
+CONF_VTHERM_AUTO_TPI_SENSOR_ENTITY = "vtherm_auto_tpi_sensor_entity"
 
 # Legacy keys (kept for backward compatibility if needed)
 CONF_THERMAL_SLOPE_ENTITY = "thermal_slope_entity"

@@ -42,6 +42,7 @@ class HAEventBridge:
         scheduler_entity_ids: list[str],
         monitored_entity_ids: list[str] | None = None,
         entry_id: str | None = None,
+        vtherm_auto_tpi_sensor_entity_id: str | None = None,
     ) -> None:
         """Initialize the event bridge.
         
@@ -52,6 +53,7 @@ class HAEventBridge:
             scheduler_entity_ids: Scheduler entities to monitor
             monitored_entity_ids: Additional entities to monitor (humidity, etc.)
             entry_id: Config entry ID for event filtering
+            vtherm_auto_tpi_sensor_entity_id: Auto TPI sensor entity ID (optional)
         """
         self._hass = hass
         self._app_service = application_service
@@ -60,10 +62,14 @@ class HAEventBridge:
         self._monitored_entity_ids = monitored_entity_ids or []
         self._entry_id = entry_id
         
-        # Construct Auto TPI sensor entity ID (where max_capacity_heat is exposed)
-        # Pattern: sensor.{climate_entity_id}_auto_tpi_learning
-        climate_domain, climate_entity = vtherm_entity_id.split(".", 1)
-        self._vtherm_auto_tpi_sensor_id = f"sensor.{climate_entity}_auto_tpi_learning"
+        # Auto TPI sensor entity ID (where max_capacity_heat is exposed)
+        # Use configured entity if provided, otherwise auto-discover from pattern
+        if vtherm_auto_tpi_sensor_entity_id:
+            self._vtherm_auto_tpi_sensor_id = vtherm_auto_tpi_sensor_entity_id
+        else:
+            # Auto-discover: Pattern: sensor.{climate_entity_id}_auto_tpi_learning
+            climate_domain, climate_entity = vtherm_entity_id.split(".", 1)
+            self._vtherm_auto_tpi_sensor_id = f"sensor.{climate_entity}_auto_tpi_learning"
         
         # Track all entities that should trigger updates
         # Include both climate entity and Auto TPI sensor entity

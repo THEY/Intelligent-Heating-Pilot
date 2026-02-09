@@ -34,6 +34,7 @@ from .const import (
     CONF_SCHEDULER_ENTITIES,
     CONF_TEMP_DELTA_THRESHOLD,
     CONF_USE_VTHERM_HEAT_RATE,
+    CONF_VTHERM_AUTO_TPI_SENSOR_ENTITY,
     CONF_VTHERM_ENTITY,
     DECISION_MODE_SIMPLE,
     DEFAULT_CYCLE_SPLIT_DURATION_MINUTES,
@@ -143,6 +144,12 @@ class IntelligentHeatingPilotCoordinator:
             use_vtherm_heat_rate_val,
             self._use_vtherm_heat_rate
         )
+        self._vtherm_auto_tpi_sensor_entity = self._get_config_value(CONF_VTHERM_AUTO_TPI_SENSOR_ENTITY)
+        if self._vtherm_auto_tpi_sensor_entity:
+            _LOGGER.debug(
+                "Loaded vtherm_auto_tpi_sensor_entity config: %s",
+                self._vtherm_auto_tpi_sensor_entity
+            )
         
         # Infrastructure adapters
         self._model_storage: HAModelStorage | None = None
@@ -194,6 +201,7 @@ class IntelligentHeatingPilotCoordinator:
             humidity_in_entity_id=self._humidity_in,
             humidity_out_entity_id=self._humidity_out,
             cloud_cover_entity_id=self._cloud_cover,
+            vtherm_auto_tpi_sensor_entity_id=self._vtherm_auto_tpi_sensor_entity,
         )
         
         # Create application service
@@ -232,6 +240,7 @@ class IntelligentHeatingPilotCoordinator:
             self._scheduler_entities,
             monitored_entities,
             entry_id=self.config.entry_id,
+            vtherm_auto_tpi_sensor_entity_id=self._vtherm_auto_tpi_sensor_entity,
         )
         
         # Load initial data

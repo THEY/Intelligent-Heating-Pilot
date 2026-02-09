@@ -38,6 +38,7 @@ class HAEnvironmentReader:
         humidity_in_entity_id: str | None = None,
         humidity_out_entity_id: str | None = None,
         cloud_cover_entity_id: str | None = None,
+        vtherm_auto_tpi_sensor_entity_id: str | None = None,
     ) -> None:
         """Initialize the environment reader.
         
@@ -48,6 +49,7 @@ class HAEnvironmentReader:
             humidity_in_entity_id: Indoor humidity sensor (optional)
             humidity_out_entity_id: Outdoor humidity sensor (optional)
             cloud_cover_entity_id: Cloud coverage sensor (optional)
+            vtherm_auto_tpi_sensor_entity_id: Auto TPI sensor entity ID (optional, for Heat Rate)
         """
         self._hass = hass
         self._vtherm_entity_id = vtherm_entity_id
@@ -55,6 +57,7 @@ class HAEnvironmentReader:
         self._humidity_in_entity_id = humidity_in_entity_id
         self._humidity_out_entity_id = humidity_out_entity_id
         self._cloud_cover_entity_id = cloud_cover_entity_id
+        self._vtherm_auto_tpi_sensor_entity_id = vtherm_auto_tpi_sensor_entity_id
         self._device_name = get_entity_name(hass, vtherm_entity_id)
     
     async def get_current_environment(self) -> EnvironmentState | None:
@@ -135,42 +138,120 @@ class HAEnvironmentReader:
         calculated by Versatile Thermostat's auto TPI algorithm.
         
         The attribute is exposed on the Auto TPI sensor entity (not the climate
-        entity). The sensor entity ID follows the pattern:
-        {climate_entity_id}_auto_tpi_learning
-        
-        Falls back to reading from climate entity if sensor entity not found.
+        entity). Uses configured sensor entity if provided, otherwise attempts
+        auto-discovery.
         
         Returns:
             Heat Rate in °C/h, or None if not available
         """
-        # Try reading from Auto TPI sensor entity first (where it's actually exposed)
+        # Priority 1: Use configured sensor entity if provided
+        if self._vtherm_auto_tpi_sensor_entity_id:
+            sensor_state = self._hass.states.get(self._vtherm_auto_tpi_sensor_entity_id)
+            if sensor_state and sensor_state.attributes:
+                heat_rate_raw = sensor_state.attributes.get(VTHERM_ATTR_MAX_CAPACITY_HEAT)
+                if heat_rate_raw is not None:
+                    try:
+                        heat_rate = float(heat_rate_raw)
+                        if heat_rate > 0:
+                            _LOGGER.debug(
+                                "[%s] Found Heat Rate %.3f°C/h from configured sensor %s",
+                                self._device_name,
+                                heat_rate,
+                                self._vtherm_auto_tpi_sensor_entity_id
+                            )
+                            return heat_rate
+                    except (ValueError, TypeError) as e:
+                        _LOGGER.debug(
+                            "[%s] Invalid Heat Rate value from configured sensor %s: %s",
+                            self._device_name,
+                            self._vtherm_auto_tpi_sensor_entity_id,
+                            heat_rate_raw,
+                            exc_info=e
+                        )
+            else:
+                _LOGGER.warning(
+                    "[%s] Configured Auto TPI sensor entity %s not found",
+                    self._device_name,
+                    self._vtherm_auto_tpi_sensor_entity_id
+                )
+        
+        # Priority 2: Try auto-discovery (if not configured or configured entity failed)
         # Sensor entity ID pattern: {climate_entity_id}_auto_tpi_learning
         # e.g., climate.office_heater -> sensor.office_heater_auto_tpi_learning
         climate_domain, climate_entity = self._vtherm_entity_id.split(".", 1)
-        sensor_entity_id = f"sensor.{climate_entity}_auto_tpi_learning"
         
-        sensor_state = self._hass.states.get(sensor_entity_id)
-        if sensor_state and sensor_state.attributes:
-            heat_rate_raw = sensor_state.attributes.get(VTHERM_ATTR_MAX_CAPACITY_HEAT)
-            if heat_rate_raw is not None:
-                try:
-                    heat_rate = float(heat_rate_raw)
-                    if heat_rate > 0:
+        # Try multiple possible entity ID patterns
+        possible_sensor_ids = [
+            f"sensor.{climate_entity}_auto_tpi_learning",
+            f"sensor.{climate_entity.replace('_', '')}_auto_tpi_learning",  # Without underscores
+        ]
+        
+        # Also search all sensor entities for one with matching unique_id pattern
+        # The unique_id is {device_name}_auto_tpi_learning, but entity_id might differ
+        for sensor_entity_id in possible_sensor_ids:
+            sensor_state = self._hass.states.get(sensor_entity_id)
+            if sensor_state and sensor_state.attributes:
+                heat_rate_raw = sensor_state.attributes.get(VTHERM_ATTR_MAX_CAPACITY_HEAT)
+                if heat_rate_raw is not None:
+                    try:
+                        heat_rate = float(heat_rate_raw)
+                        if heat_rate > 0:
+                            _LOGGER.debug(
+                                "[%s] Found Heat Rate %.3f°C/h from sensor %s",
+                                self._device_name,
+                                heat_rate,
+                                sensor_entity_id
+                            )
+                            return heat_rate
+                    except (ValueError, TypeError) as e:
                         _LOGGER.debug(
-                            "[%s] Found Heat Rate %.3f°C/h from sensor %s",
+                            "[%s] Invalid Heat Rate value from sensor %s: %s",
                             self._device_name,
-                            heat_rate,
-                            sensor_entity_id
+                            sensor_entity_id,
+                            heat_rate_raw,
+                            exc_info=e
                         )
-                        return heat_rate
-                except (ValueError, TypeError) as e:
-                    _LOGGER.debug(
-                        "[%s] Invalid Heat Rate value from sensor %s: %s",
-                        self._device_name,
-                        sensor_entity_id,
-                        heat_rate_raw,
-                        exc_info=e
-                    )
+        
+        # Search all sensor entities for one with max_capacity_heat attribute
+        # that might belong to this VTherm device (fallback if entity ID pattern doesn't match)
+        vtherm_state = self._hass.states.get(self._vtherm_entity_id)
+        if vtherm_state:
+            # Get device_id from climate entity if available
+            device_id = None
+            if vtherm_state.attributes:
+                device_id = vtherm_state.attributes.get("device_id")
+            
+            # Search sensor entities for one with the attribute
+            # Check if it's related to this device by device_id or entity_id pattern
+            for entity_id, state in self._hass.states.async_all("sensor"):
+                if not state.attributes:
+                    continue
+                    
+                # Check if this sensor has the max_capacity_heat attribute
+                if VTHERM_ATTR_MAX_CAPACITY_HEAT in state.attributes:
+                    # Verify it belongs to the same device if device_id is available
+                    if device_id and state.attributes.get("device_id") != device_id:
+                        continue
+                    
+                    # Also check if entity_id contains the climate entity name
+                    if climate_entity not in entity_id and climate_entity.replace("_", "") not in entity_id:
+                        # Skip if it doesn't seem related to this climate entity
+                        continue
+                    
+                    heat_rate_raw = state.attributes.get(VTHERM_ATTR_MAX_CAPACITY_HEAT)
+                    if heat_rate_raw is not None:
+                        try:
+                            heat_rate = float(heat_rate_raw)
+                            if heat_rate > 0:
+                                _LOGGER.debug(
+                                    "[%s] Found Heat Rate %.3f°C/h from sensor %s (discovered)",
+                                    self._device_name,
+                                    heat_rate,
+                                    entity_id
+                                )
+                                return heat_rate
+                        except (ValueError, TypeError):
+                            pass
         
         # Fallback: try reading from climate entity (for backward compatibility)
         vtherm_state = self._hass.states.get(self._vtherm_entity_id)
@@ -194,11 +275,25 @@ class HAEnvironmentReader:
                         exc_info=e
                     )
         
+        # Log available sensor entities for debugging
         _LOGGER.debug(
-            "[%s] max_capacity_heat attribute not available on sensor %s or climate entity",
+            "[%s] max_capacity_heat attribute not found. Tried sensor entities: %s",
             self._device_name,
-            sensor_entity_id
+            ", ".join(possible_sensor_ids)
         )
+        
+        # Check if any sensor entities exist with auto_tpi in the name for debugging
+        auto_tpi_sensors = [
+            entity_id for entity_id, state in self._hass.states.async_all("sensor")
+            if "auto_tpi" in entity_id.lower()
+        ]
+        if auto_tpi_sensors:
+            _LOGGER.debug(
+                "[%s] Found Auto TPI sensor entities: %s",
+                self._device_name,
+                ", ".join(auto_tpi_sensors)
+            )
+        
         return None
     
     def is_heating_active(self) -> bool:
