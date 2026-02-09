@@ -27,6 +27,7 @@ from .const import (
     CONF_SCHEDULER_ENTITIES,
     CONF_TEMP_DELTA_THRESHOLD,
     CONF_USE_VTHERM_HEAT_RATE,
+    CONF_VTHERM_AUTO_TPI_SENSOR_ENTITY,
     CONF_VTHERM_ENTITY,
     DEFAULT_CYCLE_SPLIT_DURATION_MINUTES,
     DEFAULT_LHS_RETENTION_DAYS,
@@ -253,6 +254,12 @@ class IntelligentHeatingPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN
                     default=DEFAULT_USE_VTHERM_HEAT_RATE
                 ): selector.BooleanSelector(
                     selector.BooleanSelectorConfig()
+                ),
+                vol.Optional(CONF_VTHERM_AUTO_TPI_SENSOR_ENTITY): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain="sensor",
+                        integration="versatile_thermostat"
+                    )
                 ),
             }
         )
@@ -527,6 +534,15 @@ class IntelligentHeatingPilotOptionsFlow(config_entries.OptionsFlow):
             default=_opt_or_data(CONF_USE_VTHERM_HEAT_RATE, DEFAULT_USE_VTHERM_HEAT_RATE)
         )] = selector.BooleanSelector(
             selector.BooleanSelectorConfig()
+        )
+        schema_dict[vol.Optional(
+            CONF_VTHERM_AUTO_TPI_SENSOR_ENTITY,
+            default=_opt_or_data(CONF_VTHERM_AUTO_TPI_SENSOR_ENTITY, None)
+        )] = selector.EntitySelector(
+            selector.EntitySelectorConfig(
+                domain="sensor",
+                integration="versatile_thermostat"
+            )
         )
 
         data_schema = vol.Schema(schema_dict)
