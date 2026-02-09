@@ -223,7 +223,8 @@ class HAEnvironmentReader:
             
             # Search sensor entities for one with the attribute
             # Check if it's related to this device by device_id or entity_id pattern
-            for entity_id, state in self._hass.states.async_all("sensor"):
+            for state in self._hass.states.async_all("sensor"):
+                entity_id = state.entity_id
                 if not state.attributes:
                     continue
                     
@@ -284,8 +285,8 @@ class HAEnvironmentReader:
         
         # Check if any sensor entities exist with auto_tpi in the name for debugging
         auto_tpi_sensors = [
-            entity_id for entity_id, state in self._hass.states.async_all("sensor")
-            if "auto_tpi" in entity_id.lower()
+            state.entity_id for state in self._hass.states.async_all("sensor")
+            if "auto_tpi" in state.entity_id.lower()
         ]
         if auto_tpi_sensors:
             _LOGGER.info(
@@ -302,9 +303,9 @@ class HAEnvironmentReader:
         
         # Also check all sensor entities for ones that might have max_capacity_heat
         sensors_with_capacity = []
-        for entity_id, state in self._hass.states.async_all("sensor"):
+        for state in self._hass.states.async_all("sensor"):
             if state.attributes and VTHERM_ATTR_MAX_CAPACITY_HEAT in state.attributes:
-                sensors_with_capacity.append(entity_id)
+                sensors_with_capacity.append(state.entity_id)
         
         if sensors_with_capacity:
             _LOGGER.info(
