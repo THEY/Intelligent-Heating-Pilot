@@ -288,10 +288,29 @@ class HAEnvironmentReader:
             if "auto_tpi" in entity_id.lower()
         ]
         if auto_tpi_sensors:
-            _LOGGER.debug(
+            _LOGGER.info(
                 "[%s] Found Auto TPI sensor entities: %s",
                 self._device_name,
                 ", ".join(auto_tpi_sensors)
+            )
+        else:
+            _LOGGER.warning(
+                "[%s] No Auto TPI sensor entities found. The sensor may not be created yet, "
+                "or auto TPI may not be enabled. Check VTherm configuration.",
+                self._device_name
+            )
+        
+        # Also check all sensor entities for ones that might have max_capacity_heat
+        sensors_with_capacity = []
+        for entity_id, state in self._hass.states.async_all("sensor"):
+            if state.attributes and VTHERM_ATTR_MAX_CAPACITY_HEAT in state.attributes:
+                sensors_with_capacity.append(entity_id)
+        
+        if sensors_with_capacity:
+            _LOGGER.info(
+                "[%s] Found sensor entities with max_capacity_heat attribute: %s",
+                self._device_name,
+                ", ".join(sensors_with_capacity)
             )
         
         return None
