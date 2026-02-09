@@ -234,9 +234,19 @@ class HAEnvironmentReader:
                     if device_id and state.attributes.get("device_id") != device_id:
                         continue
                     
-                    # Also check if entity_id contains the climate entity name
-                    if climate_entity not in entity_id and climate_entity.replace("_", "") not in entity_id:
-                        # Skip if it doesn't seem related to this climate entity
+                    # Try to match by device_id first (most reliable)
+                    # If device_id matches or is not available, check entity name pattern
+                    # Allow more flexible matching - check if it's an auto_tpi sensor
+                    is_auto_tpi_sensor = "auto_tpi" in entity_id.lower()
+                    matches_climate_name = (
+                        climate_entity in entity_id or 
+                        climate_entity.replace("_", "") in entity_id or
+                        climate_entity.replace("_", " ").lower() in entity_id.lower()
+                    )
+                    
+                    # Accept if it's an auto_tpi sensor OR matches the climate entity name
+                    if not is_auto_tpi_sensor and not matches_climate_name:
+                        # Skip if it doesn't seem related
                         continue
                     
                     heat_rate_raw = state.attributes.get(VTHERM_ATTR_MAX_CAPACITY_HEAT)
@@ -244,7 +254,7 @@ class HAEnvironmentReader:
                         try:
                             heat_rate = float(heat_rate_raw)
                             if heat_rate > 0:
-                                _LOGGER.debug(
+                                _LOGGER.info(
                                     "[%s] Found Heat Rate %.3f°C/h from sensor %s (discovered)",
                                     self._device_name,
                                     heat_rate,
