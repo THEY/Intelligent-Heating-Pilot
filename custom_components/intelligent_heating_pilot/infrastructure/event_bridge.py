@@ -13,6 +13,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import dt as dt_util
 
 from .vtherm_compat import get_vtherm_attribute
+from ..const import VTHERM_ATTR_MAX_CAPACITY_HEAT
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -99,7 +100,11 @@ class HAEventBridge:
         _LOGGER.debug("Event bridge tracking %d entities", len(self._tracked_entities))
     
     def _handle_vtherm_change(self, event: Event[EventStateChangedData]) -> None:
-        """Handle VTherm state changes (slope learning + update).
+        """Handle VTherm state changes (temperature + Heat Rate updates).
+        
+        Triggers recalculation when:
+        - Temperature changes (for normal operation)
+        - max_capacity_heat (Heat Rate) changes (when using VTherm Heat Rate)
         
         Args:
             event: State change event
@@ -118,19 +123,29 @@ class HAEventBridge:
         # Extract temperature changes (v8.0.0+ compatible)
         old_temp = get_vtherm_attribute(old_state, "current_temperature")
         new_temp = get_vtherm_attribute(new_state, "current_temperature")
-        
         temp_changed = old_temp != new_temp
         
-        if not (temp_changed):
-            return       
-
+        # Extract Heat Rate changes (for VTherm auto TPI)
+        old_heat_rate = get_vtherm_attribute(old_state, VTHERM_ATTR_MAX_CAPACITY_HEAT)
+        new_heat_rate = get_vtherm_attribute(new_state, VTHERM_ATTR_MAX_CAPACITY_HEAT)
+        heat_rate_changed = old_heat_rate != new_heat_rate
+        
+        # Trigger recalculation if temperature or Heat Rate changed
         if temp_changed:
             _LOGGER.debug("VTherm temperature changed: %s -> %s", old_temp, new_temp)
         
-        # Trigger recalculation and publish to sensors
-        self._hass.async_create_task(
-            self._recalculate_and_publish()
-        )
+        if heat_rate_changed:
+            _LOGGER.info(
+                "VTherm Heat Rate changed: %s -> %s °C/h",
+                old_heat_rate,
+                new_heat_rate
+            )
+        
+        if temp_changed or heat_rate_changed:
+            # Trigger recalculation and publish to sensors
+            self._hass.async_create_task(
+                self._recalculate_and_publish()
+            )
     
     async def _recalculate_and_publish(self) -> None:
         """Recalculate anticipation and publish event for sensors."""
