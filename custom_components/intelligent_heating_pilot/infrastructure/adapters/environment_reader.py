@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from ...domain.value_objects import EnvironmentState
+from ...const import VTHERM_ATTR_MAX_CAPACITY_HEAT
 from ..vtherm_compat import get_vtherm_attribute
 from .utils import get_entity_name
 
@@ -125,6 +126,36 @@ class HAEnvironmentReader:
         try:
             return float(slope_raw)
         except (ValueError, TypeError):
+            return None
+    
+    def get_vtherm_heat_rate(self) -> float | None:
+        """Get Heat Rate from VTherm's auto TPI.
+        
+        Reads the max_capacity_heat attribute which represents the Heat Rate
+        calculated by Versatile Thermostat's auto TPI algorithm.
+        
+        Returns:
+            Heat Rate in °C/h, or None if not available
+        """
+        vtherm_state = self._hass.states.get(self._vtherm_entity_id)
+        if not vtherm_state:
+            _LOGGER.debug("[%s] VTherm entity not found for Heat Rate", self._device_name)
+            return None
+        
+        # Use v8.0.0+ compatible attribute access
+        heat_rate_raw = get_vtherm_attribute(vtherm_state, VTHERM_ATTR_MAX_CAPACITY_HEAT)
+        if heat_rate_raw is None:
+            _LOGGER.debug("[%s] max_capacity_heat attribute not available", self._device_name)
+            return None
+        
+        try:
+            heat_rate = float(heat_rate_raw)
+            if heat_rate <= 0:
+                _LOGGER.debug("[%s] Invalid Heat Rate value: %.3f (must be > 0)", self._device_name, heat_rate)
+                return None
+            return heat_rate
+        except (ValueError, TypeError) as e:
+            _LOGGER.warning("[%s] Invalid Heat Rate value: %s", self._device_name, heat_rate_raw, exc_info=e)
             return None
     
     def is_heating_active(self) -> bool:

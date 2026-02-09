@@ -26,6 +26,7 @@ from .const import (
     CONF_NAME,
     CONF_SCHEDULER_ENTITIES,
     CONF_TEMP_DELTA_THRESHOLD,
+    CONF_USE_VTHERM_HEAT_RATE,
     CONF_VTHERM_ENTITY,
     DEFAULT_CYCLE_SPLIT_DURATION_MINUTES,
     DEFAULT_LHS_RETENTION_DAYS,
@@ -36,6 +37,7 @@ from .const import (
     DEFAULT_MIN_CYCLE_DURATION_MINUTES,
     DEFAULT_NAME,
     DEFAULT_TEMP_DELTA_THRESHOLD,
+    DEFAULT_USE_VTHERM_HEAT_RATE,
     DOMAIN,
 )
 
@@ -245,6 +247,12 @@ class IntelligentHeatingPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN
                         unit_of_measurement="°C/h",
                         mode=selector.NumberSelectorMode.BOX
                     )
+                ),
+                vol.Optional(
+                    CONF_USE_VTHERM_HEAT_RATE,
+                    default=DEFAULT_USE_VTHERM_HEAT_RATE
+                ): selector.BooleanSelector(
+                    selector.BooleanSelectorConfig()
                 ),
             }
         )
@@ -513,6 +521,12 @@ class IntelligentHeatingPilotOptionsFlow(config_entries.OptionsFlow):
                 unit_of_measurement="°C/h",
                 mode=selector.NumberSelectorMode.BOX
             )
+        )
+        schema_dict[vol.Optional(
+            CONF_USE_VTHERM_HEAT_RATE,
+            default=_opt_or_data(CONF_USE_VTHERM_HEAT_RATE, DEFAULT_USE_VTHERM_HEAT_RATE)
+        )] = selector.BooleanSelector(
+            selector.BooleanSelectorConfig()
         )
 
         data_schema = vol.Schema(schema_dict)
