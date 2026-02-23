@@ -153,6 +153,67 @@ class TestRevertLogicWhenAnticipatedStartMoves:
         mock_adapters["scheduler_commander"].run_action.assert_not_called()
     
     @pytest.mark.asyncio
+    async def test_no_revert_when_anticipated_start_moves_slightly_later(
+        self, app_service, mock_adapters
+    ):
+        """Test that a small shift of anticipated start (< 10 min) does NOT revert.
+
+        Reproduces the real-world scenario where recalculation noise shifts
+        the anticipated start by 1-2 minutes, which previously caused
+        the heater to turn off and back on repeatedly.
+        """
+        target_time = make_aware(datetime(2025, 1, 15, 8, 45, 0))
+        now = make_aware(datetime(2025, 1, 15, 6, 46, 0))
+
+        app_service._is_preheating_active = True
+        app_service._preheating_target_time = target_time
+        app_service._last_scheduled_lhs = 2.39
+        app_service._active_scheduler_entity = "schedule.heating"
+
+        # Anticipated start is only ~2 min in the future
+        anticipated_start = make_aware(datetime(2025, 1, 15, 6, 48, 0))
+
+        with patch("custom_components.intelligent_heating_pilot.application.dt_util.now", return_value=now):
+            await app_service._schedule_anticipation(
+                anticipated_start=anticipated_start,
+                target_time=target_time,
+                target_temp=72.0,
+                scheduler_entity_id="schedule.heating",
+                lhs=2.39,
+            )
+
+        mock_adapters["scheduler_commander"].cancel_action.assert_not_called()
+        assert app_service._is_preheating_active is True
+
+    @pytest.mark.asyncio
+    async def test_revert_when_anticipated_start_moves_far_later(
+        self, app_service, mock_adapters
+    ):
+        """Test that a large shift of anticipated start (>= 10 min) DOES revert."""
+        target_time = make_aware(datetime(2025, 1, 15, 8, 45, 0))
+        now = make_aware(datetime(2025, 1, 15, 6, 46, 0))
+
+        app_service._is_preheating_active = True
+        app_service._preheating_target_time = target_time
+        app_service._last_scheduled_lhs = 2.0
+        app_service._active_scheduler_entity = "schedule.heating"
+
+        # Anticipated start is 15 min in the future
+        anticipated_start = make_aware(datetime(2025, 1, 15, 7, 1, 0))
+
+        with patch("custom_components.intelligent_heating_pilot.application.dt_util.now", return_value=now):
+            await app_service._schedule_anticipation(
+                anticipated_start=anticipated_start,
+                target_time=target_time,
+                target_temp=72.0,
+                scheduler_entity_id="schedule.heating",
+                lhs=4.0,
+            )
+
+        mock_adapters["scheduler_commander"].cancel_action.assert_called_once()
+        assert app_service._is_preheating_active is False
+
+    @pytest.mark.asyncio
     async def test_continue_heating_when_still_needed(
         self, app_service, mock_adapters
     ):

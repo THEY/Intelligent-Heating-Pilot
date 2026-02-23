@@ -19,7 +19,7 @@ from ..domain.value_objects import (
     HeatingCycle,
 )
 from ..infrastructure.decision_strategy_factory import DecisionStrategyFactory
-from ..const import DEFAULT_DECISION_MODE, DEFAULT_DATA_RETENTION_DAYS
+from ..const import DEFAULT_DECISION_MODE, DEFAULT_DATA_RETENTION_DAYS, DEFAULT_REVERT_MIN_MINUTES_LATER
 
 if TYPE_CHECKING:
     from ..infrastructure.adapters import (
@@ -637,13 +637,16 @@ class HeatingApplicationService:
         
         # Only if scheduler is enabled, check if we're currently pre-heating and should revert
         if self._is_preheating_active:
-            # If anticipated start moved to the future (after now), we should stop pre-heating
-            if anticipated_start > now and self._preheating_target_time == target_time:
+            # Only revert if anticipated start moved significantly into the future,
+            # avoiding false reverts from small recalculation noise (e.g. 1-2 min shifts).
+            minutes_later = (anticipated_start - now).total_seconds() / 60.0
+            if minutes_later >= DEFAULT_REVERT_MIN_MINUTES_LATER and self._preheating_target_time == target_time:
                 _LOGGER.info(
-                    "Anticipated start time moved later (now: %s, new start: %s). "
+                    "Anticipated start time moved significantly later (now: %s, new start: %s, +%.1f min). "
                     "LHS improved from %.2f to %.2f°C/h. Reverting to current scheduled state.",
                     now.isoformat(),
                     anticipated_start.isoformat(),
+                    minutes_later,
                     self._last_scheduled_lhs or 0.0,
                     lhs
                 )
@@ -654,6 +657,15 @@ class HeatingApplicationService:
                 self._last_scheduled_time = anticipated_start
                 self._last_scheduled_lhs = lhs
                 self._is_preheating_active = False
+                return
+            
+            if anticipated_start > now and self._preheating_target_time == target_time:
+                _LOGGER.debug(
+                    "Anticipated start moved slightly later (+%.1f min < %d min threshold). "
+                    "Continuing pre-heating.",
+                    minutes_later,
+                    DEFAULT_REVERT_MIN_MINUTES_LATER,
+                )
                 return
             
             # If we've reached the target time, mark pre-heating as complete

@@ -54,6 +54,9 @@ DEFAULT_MANUAL_SLOPE_MODE = False  # Use manual slope instead of calculating
 DEFAULT_MANUAL_SLOPE_VALUE = 2.0  # Manual heating slope in °C/h (when manual mode is enabled)
 DEFAULT_USE_VTHERM_HEAT_RATE = False  # Use VTherm's auto TPI Heat Rate instead of calculating
 
+# Pre-heating revert thresholds
+DEFAULT_REVERT_MIN_MINUTES_LATER = 10  # Only revert active preheat if anticipated start moved 10+ min into future
+
 # Service names
 SERVICE_CALCULATE_START_TIME = "calculate_start_time"
 SERVICE_SCHEDULER_RUN_ACTION = "run_action"
