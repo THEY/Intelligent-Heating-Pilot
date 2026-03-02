@@ -115,7 +115,7 @@ class HAEnvironmentReader:
         """Get current heating slope from VTherm.
         
         Returns:
-            Current slope in °C/h, or None if not available
+            Current slope in C/h, or None if not available
         """
         vtherm_state = self._hass.states.get(self._vtherm_entity_id)
         if not vtherm_state:
@@ -142,7 +142,7 @@ class HAEnvironmentReader:
         auto-discovery.
         
         Returns:
-            Heat Rate in °C/h, or None if not available
+            Heat Rate in C/h, or None if not available
         """
         # Priority 1: Use configured sensor entity if provided
         if self._vtherm_auto_tpi_sensor_entity_id:
@@ -154,7 +154,7 @@ class HAEnvironmentReader:
                         heat_rate = float(heat_rate_raw)
                         if heat_rate > 0:
                             _LOGGER.debug(
-                                "[%s] Found Heat Rate %.3f°C/h from configured sensor %s",
+                                "[%s] Found Heat Rate %.3fC/h from configured sensor %s",
                                 self._device_name,
                                 heat_rate,
                                 self._vtherm_auto_tpi_sensor_entity_id
@@ -197,7 +197,7 @@ class HAEnvironmentReader:
                         heat_rate = float(heat_rate_raw)
                         if heat_rate > 0:
                             _LOGGER.debug(
-                                "[%s] Found Heat Rate %.3f°C/h from sensor %s",
+                                "[%s] Found Heat Rate %.3fC/h from sensor %s",
                                 self._device_name,
                                 heat_rate,
                                 sensor_entity_id
@@ -255,7 +255,7 @@ class HAEnvironmentReader:
                             heat_rate = float(heat_rate_raw)
                             if heat_rate > 0:
                                 _LOGGER.info(
-                                    "[%s] Found Heat Rate %.3f°C/h from sensor %s (discovered)",
+                                    "[%s] Found Heat Rate %.3fC/h from sensor %s (discovered)",
                                     self._device_name,
                                     heat_rate,
                                     entity_id
@@ -273,7 +273,7 @@ class HAEnvironmentReader:
                     heat_rate = float(heat_rate_raw)
                     if heat_rate > 0:
                         _LOGGER.debug(
-                            "[%s] Found Heat Rate %.3f°C/h from climate entity",
+                            "[%s] Found Heat Rate %.3fC/h from climate entity",
                             self._device_name,
                             heat_rate
                         )

@@ -54,7 +54,7 @@ class PredictionService:
         Required Args:
             current_temp: Current room temperature in Celsius
             target_temp: Target temperature in Celsius
-            learned_slope: Learned heating slope in °C/hour
+            learned_slope: Learned heating slope in C/hour
             target_time: When target should be reached (mandatory)
             
         Optional Args:
@@ -71,7 +71,7 @@ class PredictionService:
         if temp_delta <= 0:
             # Already at target, anticipated start time = target time
             _LOGGER.debug(
-                "Already at target temperature (%.1f°C >= %.1f°C), no heating needed",
+                "Already at target temperature (%.1fC >= %.1fC), no heating needed",
                 current_temp,
                 target_temp
             )
@@ -85,7 +85,7 @@ class PredictionService:
         # Protection against invalid slope
         if learned_slope <= 0:
             _LOGGER.warning(
-                "Invalid learned heating slope (%.2f°C/h <= 0), cannot calculate prediction",
+                "Invalid learned heating slope (%.2fC/h <= 0), cannot calculate prediction",
                 learned_slope
             )
             return PredictionResult(
@@ -119,7 +119,7 @@ class PredictionService:
         confidence = self._calculate_confidence(learned_slope, outdoor_temp, humidity)
         
         _LOGGER.debug(
-            "Prediction: ΔT=%.1f°C, slope=%.2f°C/h, correction=%.2f, "
+            "Prediction: ΔT=%.1fC, slope=%.2fC/h, correction=%.2f, "
             "duration=%.1f min, confidence=%.2f",
             temp_delta,
             learned_slope,
@@ -161,14 +161,14 @@ class PredictionService:
         
         # Outdoor temperature factor: colder outside means slower heating
         # Formula: outdoor_factor = 1 + (OUTDOOR_TEMP_REFERENCE - outdoor_temp) * OUTDOOR_TEMP_FACTOR
-        # At outdoor_temp = 20°C: factor = 1.0 (no impact)
-        # At outdoor_temp = 0°C: factor = 2.0 (heating takes twice as long)
-        # At outdoor_temp = -10°C: factor = 2.5 (even slower)
+        # At outdoor_temp = 20C: factor = 1.0 (no impact)
+        # At outdoor_temp = 0C: factor = 2.0 (heating takes twice as long)
+        # At outdoor_temp = -10C: factor = 2.5 (even slower)
         if outdoor_temp is not None:
             outdoor_factor = 1.0 + (OUTDOOR_TEMP_REFERENCE - outdoor_temp) * OUTDOOR_TEMP_FACTOR
             outdoor_factor = max(0.5, outdoor_factor)  # Minimum factor of 0.5
             correction_factor *= outdoor_factor
-            _LOGGER.debug("Outdoor temp %.1f°C -> factor %.2f", outdoor_temp, outdoor_factor)
+            _LOGGER.debug("Outdoor temp %.1fC -> factor %.2f", outdoor_temp, outdoor_factor)
         
         # Humidity factor: higher humidity makes heating feel slower
         # Formula: humidity_factor = 1 + (humidity - HUMIDITY_REFERENCE) * HUMIDITY_FACTOR
@@ -207,7 +207,7 @@ class PredictionService:
         - Available environmental data (more data = better prediction)
         
         Args:
-            learned_slope: Learned heating slope in °C/hour
+            learned_slope: Learned heating slope in C/hour
             outdoor_temp: Outdoor temperature (if available)
             humidity: Indoor humidity (if available)
             

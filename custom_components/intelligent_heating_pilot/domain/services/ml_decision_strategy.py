@@ -65,8 +65,8 @@ class MLDecisionStrategy(IDecisionStrategy):
             A heating decision predicted by the ML model
         """
         _LOGGER.debug("MLDecisionStrategy.decide_heating_action called")
-        _LOGGER.debug(f"Environment: indoor={environment.indoor_temperature}°C, "
-                     f"outdoor={environment.outdoor_temp}°C, "
+        _LOGGER.debug(f"Environment: indoor={environment.indoor_temperature}C, "
+                     f"outdoor={environment.outdoor_temp}C, "
                      f"humidity={environment.indoor_humidity}%")
         
         # Get next scheduled timeslot for context
@@ -110,14 +110,14 @@ class MLDecisionStrategy(IDecisionStrategy):
         
         Args:
             environment: Current environmental conditions
-            current_slope: Current heating rate in °C/hour
+            current_slope: Current heating rate in C/hour
             
         Returns:
             Decision to stop heating if ML model predicts overshoot
         """
         _LOGGER.debug("MLDecisionStrategy.check_overshoot_risk called")
-        _LOGGER.debug(f"Current slope: {current_slope:.4f}°C/hour, "
-                     f"indoor_temp={environment.indoor_temperature}°C")
+        _LOGGER.debug(f"Current slope: {current_slope:.4f}C/hour, "
+                     f"indoor_temp={environment.indoor_temperature}C")
         
         next_timeslot = await self._scheduler_reader.get_next_timeslot()
         

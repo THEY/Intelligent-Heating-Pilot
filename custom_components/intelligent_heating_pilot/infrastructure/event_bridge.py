@@ -8,8 +8,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.core import CALLBACK_TYPE, Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 from homeassistant.util import dt as dt_util
 
 from .vtherm_compat import get_vtherm_attribute
@@ -84,6 +84,9 @@ class HAEventBridge:
         
         # Debouncing state
         self._ignore_vtherm_until: datetime | None = None
+        self._pending_recalc_cancel: CALLBACK_TYPE | None = None
+
+    _DEBOUNCE_SECONDS = 0.5
     
     def setup_listeners(self) -> None:
         """Setup all event listeners."""
@@ -104,9 +107,7 @@ class HAEventBridge:
             else:
                 # Other entities just trigger recalculation
                 _LOGGER.debug("Entity %s changed, triggering update", entity_id)
-                self._hass.async_create_task(
-                    self._recalculate_and_publish()
-                )
+                self._schedule_debounced_recalc()
         
         # Register state change listener
         unsub = async_track_state_change_event(
@@ -155,16 +156,13 @@ class HAEventBridge:
         
         if heat_rate_changed:
             _LOGGER.info(
-                "VTherm Heat Rate changed: %s -> %s °C/h",
+                "VTherm Heat Rate changed: %s -> %s C/h",
                 old_heat_rate,
                 new_heat_rate
             )
         
         if temp_changed or heat_rate_changed:
-            # Trigger recalculation and publish to sensors
-            self._hass.async_create_task(
-                self._recalculate_and_publish()
-            )
+            self._schedule_debounced_recalc()
     
     def _handle_auto_tpi_sensor_change(self, event: Event[EventStateChangedData]) -> None:
         """Handle Auto TPI sensor entity changes (Heat Rate updates).
@@ -194,15 +192,27 @@ class HAEventBridge:
         
         if heat_rate_changed:
             _LOGGER.info(
-                "VTherm Auto TPI Heat Rate changed: %s -> %s °C/h",
+                "VTherm Auto TPI Heat Rate changed: %s -> %s C/h",
                 old_heat_rate,
                 new_heat_rate
             )
-            # Trigger recalculation and publish to sensors
-            self._hass.async_create_task(
-                self._recalculate_and_publish()
-            )
+            self._schedule_debounced_recalc()
     
+    @callback
+    def _schedule_debounced_recalc(self) -> None:
+        """Schedule a recalculation after a short delay, coalescing rapid-fire events."""
+        if self._pending_recalc_cancel:
+            self._pending_recalc_cancel()
+
+        @callback
+        def _fire(_now: object) -> None:
+            self._pending_recalc_cancel = None
+            self._hass.async_create_task(self._recalculate_and_publish())
+
+        self._pending_recalc_cancel = async_call_later(
+            self._hass, self._DEBOUNCE_SECONDS, _fire
+        )
+
     async def _recalculate_and_publish(self) -> None:
         """Recalculate anticipation and publish event for sensors."""
         anticipation_data = await self._app_service.calculate_and_schedule_anticipation()
@@ -246,6 +256,9 @@ class HAEventBridge:
     
     def cleanup(self) -> None:
         """Cleanup all event listeners."""
+        if self._pending_recalc_cancel:
+            self._pending_recalc_cancel()
+            self._pending_recalc_cancel = None
         for unsub in self._listeners:
             unsub()
         self._listeners.clear()

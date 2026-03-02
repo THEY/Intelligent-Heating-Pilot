@@ -26,7 +26,7 @@ STORAGE_VERSION = 1
 STORAGE_KEY = "intelligent_heating_pilot_model"
 
 # Default values
-DEFAULT_HEATING_SLOPE = 2.0  # °C/h - Conservative default
+DEFAULT_HEATING_SLOPE = 2.0  # C/h - Conservative default
 
 
 class HAModelStorage(IModelStorage):
@@ -87,14 +87,14 @@ class HAModelStorage(IModelStorage):
         This is now primarily used as a fallback when contextual LHS cannot be computed.
         
         Returns:
-            The learned heating slope in °C/hour.
+            The learned heating slope in C/hour.
         """
         await self._ensure_loaded()
         
         lhs = self._data.get("learned_heating_slope")
         if lhs is None or lhs <= 0:
             _LOGGER.debug(
-                "No learned heating slope in history, using default: %.2f°C/h",
+                "No learned heating slope in history, using default: %.2fC/h",
                 DEFAULT_HEATING_SLOPE
             )
             return DEFAULT_HEATING_SLOPE

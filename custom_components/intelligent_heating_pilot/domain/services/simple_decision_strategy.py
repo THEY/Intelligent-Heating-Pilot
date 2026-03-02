@@ -63,8 +63,8 @@ class SimpleDecisionStrategy(IDecisionStrategy):
             A heating decision based on simple predictive rules
         """
         _LOGGER.debug("SimpleDecisionStrategy.decide_heating_action called")
-        _LOGGER.debug(f"Environment: indoor={environment.indoor_temperature}°C, "
-                     f"outdoor={environment.outdoor_temp}°C, "
+        _LOGGER.debug(f"Environment: indoor={environment.indoor_temperature}C, "
+                     f"outdoor={environment.outdoor_temp}C, "
                      f"humidity={environment.indoor_humidity}%")
         
         # Get next scheduled timeslot
@@ -83,14 +83,14 @@ class SimpleDecisionStrategy(IDecisionStrategy):
         if current_temp >= next_timeslot.target_temp:
             decision = HeatingDecision(
                 action=HeatingAction.NO_ACTION,
-                reason=f"Already at target temperature ({current_temp:.1f}°C >= {next_timeslot.target_temp:.1f}°C)"
+                reason=f"Already at target temperature ({current_temp:.1f}C >= {next_timeslot.target_temp:.1f}C)"
             )
             _LOGGER.info(f"Decision: {decision.action.value} - {decision.reason}")
             return decision
         
         # Get learned heating slope
         lhs = await self._storage.get_learned_heating_slope()
-        _LOGGER.info(f"Learned heating slope: {lhs:.4f}°C/hour")
+        _LOGGER.info(f"Learned heating slope: {lhs:.4f}C/hour")
         
         # Calculate prediction
         prediction = self._prediction_service.predict_heating_time(
@@ -142,14 +142,14 @@ class SimpleDecisionStrategy(IDecisionStrategy):
         
         Args:
             environment: Current environmental conditions
-            current_slope: Current heating rate in °C/hour
+            current_slope: Current heating rate in C/hour
             
         Returns:
             Decision to stop heating if overshoot is detected
         """
         _LOGGER.debug("SimpleDecisionStrategy.check_overshoot_risk called")
-        _LOGGER.debug(f"Current slope: {current_slope:.4f}°C/hour, "
-                     f"indoor_temp={environment.indoor_temperature}°C")
+        _LOGGER.debug(f"Current slope: {current_slope:.4f}C/hour, "
+                     f"indoor_temp={environment.indoor_temperature}C")
         
         next_timeslot = await self._scheduler_reader.get_next_timeslot()
         
@@ -174,23 +174,23 @@ class SimpleDecisionStrategy(IDecisionStrategy):
         
         estimated_temp = environment.indoor_temperature + (current_slope * time_to_target)
         
-        # Stop if we'll overshoot by more than 0.5°C
+        # Stop if we'll overshoot by more than 0.5C
         overshoot_threshold = next_timeslot.target_temp + 0.5
         
-        _LOGGER.debug(f"Estimated temp at target time: {estimated_temp:.1f}°C, "
-                     f"threshold: {overshoot_threshold:.1f}°C")
+        _LOGGER.debug(f"Estimated temp at target time: {estimated_temp:.1f}C, "
+                     f"threshold: {overshoot_threshold:.1f}C")
         
         if estimated_temp > overshoot_threshold:
             decision = HeatingDecision(
                 action=HeatingAction.STOP_HEATING,
-                reason=f"Overshoot risk detected (estimated: {estimated_temp:.1f}°C > threshold: {overshoot_threshold:.1f}°C)"
+                reason=f"Overshoot risk detected (estimated: {estimated_temp:.1f}C > threshold: {overshoot_threshold:.1f}C)"
             )
             _LOGGER.info(f"Decision: {decision.action.value} - {decision.reason}")
             return decision
         
         decision = HeatingDecision(
             action=HeatingAction.NO_ACTION,
-            reason=f"No overshoot risk (estimated: {estimated_temp:.1f}°C)"
+            reason=f"No overshoot risk (estimated: {estimated_temp:.1f}C)"
         )
         _LOGGER.debug(f"Decision: {decision.action.value} - {decision.reason}")
         return decision

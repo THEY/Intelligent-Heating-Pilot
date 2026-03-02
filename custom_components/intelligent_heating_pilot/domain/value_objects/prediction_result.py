@@ -16,7 +16,7 @@ class PredictionResult:
         anticipated_start_time: When heating should begin
         estimated_duration_minutes: How long heating is expected to take
         confidence_level: Confidence in prediction (0.0-1.0)
-        learned_heating_slope: The heating slope used for prediction (°C/h)
+        learned_heating_slope: The heating slope used for prediction (C/h)
     """
     
     anticipated_start_time: datetime

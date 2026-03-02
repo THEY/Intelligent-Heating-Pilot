@@ -104,7 +104,7 @@ class HASchedulerReader(ISchedulerReader):
         if chosen_time and chosen_temp is not None and chosen_entity:
             device_name = get_entity_name(self._hass, chosen_entity)
             _LOGGER.info(
-                "[%s] Next timeslot at %s (%.1f°C)",
+                "[%s] Next timeslot at %s (%.1fC)",
                 device_name,
                 chosen_time.strftime("%H:%M"),
                 chosen_temp
@@ -355,10 +355,10 @@ class HASchedulerReader(ISchedulerReader):
                         temp_value = float(preset_temps[preset_key])
                         # Ignore 0 values as they indicate uninitialized presets
                         if temp_value > 0:
-                            _LOGGER.debug("Resolved preset '%s' to %.1f°C (from %s)", preset, temp_value, preset_key)
+                            _LOGGER.debug("Resolved preset '%s' to %.1fC (from %s)", preset, temp_value, preset_key)
                             return temp_value
                         else:
-                            _LOGGER.debug("Skipping preset '%s' with 0°C (likely uninitialized)", preset)
+                            _LOGGER.debug("Skipping preset '%s' with 0C (likely uninitialized)", preset)
                     except (ValueError, TypeError):
                         _LOGGER.debug("Invalid preset_temperatures value for %s: %s", preset_key, preset_temps[preset_key])
         

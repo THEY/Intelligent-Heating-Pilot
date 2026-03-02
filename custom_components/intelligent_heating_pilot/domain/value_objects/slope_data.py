@@ -14,7 +14,7 @@ class SlopeData:
     """Immutable record of a heating slope measurement.
     
     Attributes:
-        slope_value: Heating slope in °C/hour
+        slope_value: Heating slope in C/hour
         timestamp: UTC timestamp when the slope was recorded
     """
     

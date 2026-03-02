@@ -3,9 +3,20 @@ from __future__ import annotations
 
 from unittest.mock import Mock
 
+import pytest
+
+from custom_components.intelligent_heating_pilot.infrastructure import vtherm_compat
 from custom_components.intelligent_heating_pilot.infrastructure.vtherm_compat import (
     get_vtherm_attribute,
 )
+
+
+@pytest.fixture(autouse=True)
+def _clear_logged_misses():
+    """Reset the logged-missing-attrs set between tests."""
+    vtherm_compat._logged_missing_attrs.clear()
+    yield
+    vtherm_compat._logged_missing_attrs.clear()
 
 
 def test_get_vtherm_attribute_from_specific_states() -> None:
@@ -130,3 +141,22 @@ def test_get_vtherm_attribute_specific_states_not_dict() -> None:
     
     # THEN: Should fallback to root level
     assert slope == 0.05
+
+
+def test_missing_attribute_logged_only_once(caplog) -> None:
+    """Test that a missing attribute is logged once, not on every call."""
+    mock_state = Mock()
+    mock_state.entity_id = "climate.office_heater"
+    mock_state.attributes = {"current_temperature": 72}
+
+    import logging
+    with caplog.at_level(logging.DEBUG, logger="custom_components.intelligent_heating_pilot.infrastructure.vtherm_compat"):
+        get_vtherm_attribute(mock_state, "max_capacity_heat", default=None)
+        get_vtherm_attribute(mock_state, "max_capacity_heat", default=None)
+        get_vtherm_attribute(mock_state, "max_capacity_heat", default=None)
+
+    not_found_messages = [
+        r for r in caplog.records
+        if "not found" in r.message and "max_capacity_heat" in r.message
+    ]
+    assert len(not_found_messages) == 1

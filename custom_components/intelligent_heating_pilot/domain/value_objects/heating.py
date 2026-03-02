@@ -76,7 +76,7 @@ class HeatingCycle:
 
     @property
     def avg_heating_slope(self) -> float:
-        """Calculates the average heating slope in °C/hour for the heating cycle."""
+        """Calculates the average heating slope in C/hour for the heating cycle."""
         duration_hours = (self.end_time - self.start_time).total_seconds() / 3600
         if duration_hours == 0:
             return 0.0

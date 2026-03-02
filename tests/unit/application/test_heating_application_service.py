@@ -610,6 +610,48 @@ class TestAdditionalScenarios:
         assert mock_adapters["scheduler_commander"].run_action.call_count == 1
 
 
+class TestConfidenceLevel:
+    """Test suite for confidence_level values in anticipation data."""
+
+    @pytest.mark.asyncio
+    async def test_already_at_target_returns_confidence_on_zero_one_scale(
+        self, app_service, mock_adapters
+    ):
+        """confidence_level must be 0.0-1.0, not 0-100, even when already at target."""
+        now = make_aware(datetime(2025, 1, 15, 12, 0, 0))
+        target_time = make_aware(datetime(2025, 1, 15, 18, 0, 0))
+
+        timeslot = ScheduledTimeslot(
+            target_time=target_time,
+            target_temp=20.0,
+            timeslot_id="evening",
+            scheduler_entity="schedule.heating",
+        )
+        environment = EnvironmentState(
+            indoor_temperature=22.0,  # Already above target
+            outdoor_temp=10.0,
+            indoor_humidity=50.0,
+            cloud_coverage=30.0,
+            timestamp=now,
+        )
+        mock_adapters["scheduler_reader"].get_next_timeslot.return_value = timeslot
+        mock_adapters["environment_reader"].get_current_environment.return_value = environment
+        mock_adapters["model_storage"].get_learned_heating_slope.return_value = 2.0
+
+        with patch(
+            "custom_components.intelligent_heating_pilot.application.dt_util.now",
+            return_value=now,
+        ):
+            result = await app_service.calculate_and_schedule_anticipation()
+
+        assert result is not None
+        assert 0.0 <= result["confidence_level"] <= 1.0, (
+            f"confidence_level must be on 0-1 scale, got {result['confidence_level']}"
+        )
+        assert result["confidence_level"] == 1.0
+        assert result["anticipation_minutes"] == 0
+
+
 class TestManualSlopeMode:
     """Test suite for manual slope mode feature."""
     

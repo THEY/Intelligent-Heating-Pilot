@@ -24,6 +24,7 @@ from .const import (
     CONF_MAX_HEATING_SLOPE,
     CONF_MIN_CYCLE_DURATION_MINUTES,
     CONF_NAME,
+    CONF_OUTDOOR_TEMP_ENTITY,
     CONF_SCHEDULER_ENTITIES,
     CONF_TEMP_DELTA_THRESHOLD,
     CONF_USE_VTHERM_HEAT_RATE,
@@ -152,6 +153,12 @@ class IntelligentHeatingPilotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN
                     selector.EntitySelectorConfig(
                         domain="sensor",
                         device_class="humidity"
+                    )
+                ),
+                vol.Optional(CONF_OUTDOOR_TEMP_ENTITY): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain="sensor",
+                        device_class="temperature"
                     )
                 ),
                 vol.Optional(CONF_CLOUD_COVER_ENTITY): selector.EntitySelector(
@@ -298,6 +305,7 @@ class IntelligentHeatingPilotOptionsFlow(config_entries.OptionsFlow):
             optional_entity_fields = [
                 CONF_HUMIDITY_IN_ENTITY,
                 CONF_HUMIDITY_OUT_ENTITY,
+                CONF_OUTDOOR_TEMP_ENTITY,
                 CONF_CLOUD_COVER_ENTITY,
             ]
             fields_to_delete = []
@@ -366,6 +374,7 @@ class IntelligentHeatingPilotOptionsFlow(config_entries.OptionsFlow):
         vtherm_val = _opt_or_data(CONF_VTHERM_ENTITY)
         hum_in_val = _opt_or_data(CONF_HUMIDITY_IN_ENTITY)
         hum_out_val = _opt_or_data(CONF_HUMIDITY_OUT_ENTITY)
+        outdoor_temp_val = _opt_or_data(CONF_OUTDOOR_TEMP_ENTITY)
         cloud_val = _opt_or_data(CONF_CLOUD_COVER_ENTITY)
 
         # Build schema dynamically: only set default if value exists and is non-empty
@@ -426,6 +435,16 @@ class IntelligentHeatingPilotOptionsFlow(config_entries.OptionsFlow):
             selector.EntitySelectorConfig(
                 domain="sensor",
                 device_class="humidity"
+            )
+        )
+
+        schema_dict[vol.Optional(
+            CONF_OUTDOOR_TEMP_ENTITY,
+            description={"suggested_value": outdoor_temp_val} if outdoor_temp_val and outdoor_temp_val != "" else {}
+        )] = selector.EntitySelector(
+            selector.EntitySelectorConfig(
+                domain="sensor",
+                device_class="temperature"
             )
         )
 

@@ -31,6 +31,7 @@ from .const import (
     CONF_MAX_CYCLE_DURATION_MINUTES,
     CONF_MAX_HEATING_SLOPE,
     CONF_MIN_CYCLE_DURATION_MINUTES,
+    CONF_OUTDOOR_TEMP_ENTITY,
     CONF_SCHEDULER_ENTITIES,
     CONF_TEMP_DELTA_THRESHOLD,
     CONF_USE_VTHERM_HEAT_RATE,
@@ -91,6 +92,7 @@ class IntelligentHeatingPilotCoordinator:
         self._scheduler_entities = self._get_scheduler_entities()
         self._humidity_in = self._get_config_value(CONF_HUMIDITY_IN_ENTITY)
         self._humidity_out = self._get_config_value(CONF_HUMIDITY_OUT_ENTITY)
+        self._outdoor_temp = self._get_config_value(CONF_OUTDOOR_TEMP_ENTITY)
         self._cloud_cover = self._get_config_value(CONF_CLOUD_COVER_ENTITY)
         # Support both old and new config keys for backward compatibility
         self._data_retention_days = int(
@@ -123,7 +125,7 @@ class IntelligentHeatingPilotCoordinator:
             max_slope_val if max_slope_val is not None else DEFAULT_MAX_HEATING_SLOPE
         )
         _LOGGER.debug(
-            "Loaded max_heating_slope config: %s -> %.2f°C/h",
+            "Loaded max_heating_slope config: %s -> %.2fC/h",
             max_slope_val,
             self._max_heating_slope
         )
@@ -197,7 +199,7 @@ class IntelligentHeatingPilotCoordinator:
         self._environment_reader = HAEnvironmentReader(
             self.hass,
             self._vtherm_entity,
-            outdoor_temp_entity_id=None,  # TODO: Add to config
+            outdoor_temp_entity_id=self._outdoor_temp,
             humidity_in_entity_id=self._humidity_in,
             humidity_out_entity_id=self._humidity_out,
             cloud_cover_entity_id=self._cloud_cover,
@@ -230,6 +232,8 @@ class IntelligentHeatingPilotCoordinator:
             monitored_entities.append(self._humidity_in)
         if self._humidity_out:
             monitored_entities.append(self._humidity_out)
+        if self._outdoor_temp:
+            monitored_entities.append(self._outdoor_temp)
         if self._cloud_cover:
             monitored_entities.append(self._cloud_cover)
         
@@ -398,7 +402,7 @@ class IntelligentHeatingPilotCoordinator:
                 age = dt_util.utcnow() - cached.updated_at
                 if age <= dt_util.dt.timedelta(hours=LHS_CACHE_TTL_HOURS):
                     _LOGGER.info(
-                        "[%s] Using cached global LHS (age %.1f h): %.2f°C/h",
+                        "[%s] Using cached global LHS (age %.1f h): %.2fC/h",
                         self.config.entry_id,
                         age.total_seconds() / 3600,
                         cached.value,
@@ -408,7 +412,7 @@ class IntelligentHeatingPilotCoordinator:
             _LOGGER.debug("Failed to read cached global LHS", exc_info=True)
 
         fallback = await self._model_storage.get_learned_heating_slope()
-        _LOGGER.debug("[%s] Using fallback learned LHS: %.2f°C/h", self.config.entry_id, fallback)
+        _LOGGER.debug("[%s] Using fallback learned LHS: %.2fC/h", self.config.entry_id, fallback)
         return fallback
 
 

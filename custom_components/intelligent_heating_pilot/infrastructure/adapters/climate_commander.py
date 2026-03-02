@@ -43,7 +43,7 @@ class HAClimateCommander:
             target_temp: Target temperature in Celsius
         """
         _LOGGER.info(
-            "[%s] Setting temperature to %.1f°C",
+            "[%s] Setting temperature to %.1fC",
             self._device_name,
             target_temp
         )

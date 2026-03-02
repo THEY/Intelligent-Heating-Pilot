@@ -12,7 +12,7 @@ from ..value_objects import HeatingCycle
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_HEATING_SLOPE = 2.0  # °C/h - Conservative default
+DEFAULT_HEATING_SLOPE = 2.0  # C/h - Conservative default
 
 
 class LHSCalculationService:
@@ -32,11 +32,11 @@ class LHSCalculationService:
         """Initialize the LHS calculation service.
         
         Args:
-            max_heating_slope: Maximum heating slope in °C/h to cap final result (None = no cap)
+            max_heating_slope: Maximum heating slope in C/h to cap final result (None = no cap)
         """
         self._max_heating_slope = max_heating_slope
         if max_heating_slope is not None:
-            _LOGGER.debug("LHSCalculationService initialized with max_heating_slope=%.2f°C/h", max_heating_slope)
+            _LOGGER.debug("LHSCalculationService initialized with max_heating_slope=%.2fC/h", max_heating_slope)
         else:
             _LOGGER.debug("LHSCalculationService initialized without max_heating_slope cap")
     
@@ -44,7 +44,7 @@ class LHSCalculationService:
         """Apply maximum cap to calculated slope if configured.
         
         Args:
-            calculated_slope: The calculated slope value in °C/h
+            calculated_slope: The calculated slope value in C/h
             
         Returns:
             The minimum of calculated_slope and max_heating_slope (if configured), otherwise calculated_slope
@@ -53,7 +53,7 @@ class LHSCalculationService:
             capped = min(calculated_slope, self._max_heating_slope)
             if capped != calculated_slope:
                 _LOGGER.debug(
-                    "Applied max cap: %.2f°C/h -> %.2f°C/h (max=%.2f°C/h)",
+                    "Applied max cap: %.2fC/h -> %.2fC/h (max=%.2fC/h)",
                     calculated_slope,
                     capped,
                     self._max_heating_slope
@@ -68,16 +68,16 @@ class LHSCalculationService:
         that still uses raw slope values instead of HeatingCycle objects.
         
         Args:
-            slope_values: List of slope values in °C/hour
+            slope_values: List of slope values in C/hour
             
         Returns:
-            Simple average in °C/hour, or default if no data
+            Simple average in C/hour, or default if no data
         """
         _LOGGER.debug("Calculating simple average from %d slope values", len(slope_values))
         
         if not slope_values:
             _LOGGER.debug(
-                "No slope values provided, using default: %.2f°C/h",
+                "No slope values provided, using default: %.2fC/h",
                 DEFAULT_HEATING_SLOPE
             )
             return DEFAULT_HEATING_SLOPE
@@ -87,14 +87,14 @@ class LHSCalculationService:
         
         if capped_slope != avg_slope:
             _LOGGER.debug(
-                "Calculated simple average from %d values: %.2f°C/h, capped to %.2f°C/h",
+                "Calculated simple average from %d values: %.2fC/h, capped to %.2fC/h",
                 len(slope_values),
                 avg_slope,
                 capped_slope
             )
         else:
             _LOGGER.debug(
-                "Calculated simple average from %d values: %.2f°C/h",
+                "Calculated simple average from %d values: %.2fC/h",
                 len(slope_values),
                 avg_slope
             )
@@ -108,13 +108,13 @@ class LHSCalculationService:
             heating_cycles: List of heating cycles to analyze
             
         Returns:
-            Average heating slope in °C/hour, or default if no data
+            Average heating slope in C/hour, or default if no data
         """
         _LOGGER.info("Calculating global LHS from %d heating cycles", len(heating_cycles))
         
         if not heating_cycles:
             _LOGGER.debug(
-                "No heating cycles provided, using default: %.2f°C/h",
+                "No heating cycles provided, using default: %.2fC/h",
                 DEFAULT_HEATING_SLOPE
             )
             return DEFAULT_HEATING_SLOPE
@@ -125,14 +125,14 @@ class LHSCalculationService:
         
         if capped_slope != avg_slope:
             _LOGGER.info(
-                "Calculated global LHS from %d cycles: %.2f°C/h, capped to %.2f°C/h",
+                "Calculated global LHS from %d cycles: %.2fC/h, capped to %.2fC/h",
                 len(heating_cycles),
                 avg_slope,
                 capped_slope
             )
         else:
             _LOGGER.info(
-                "Calculated global LHS from %d cycles: %.2f°C/h",
+                "Calculated global LHS from %d cycles: %.2fC/h",
                 len(heating_cycles),
                 avg_slope
             )
@@ -168,7 +168,7 @@ class LHSCalculationService:
         
         if not heating_cycles:
             _LOGGER.debug(
-                "No heating cycles provided, using default: %.2f°C/h",
+                "No heating cycles provided, using default: %.2fC/h",
                 DEFAULT_HEATING_SLOPE
             )
             return DEFAULT_HEATING_SLOPE
@@ -194,7 +194,7 @@ class LHSCalculationService:
         if not active_cycles:
             lhs = self.calculate_global_lhs(heating_cycles)
             _LOGGER.debug(
-                "No cycles active at hour %d, using global: %.2f°C/h",
+                "No cycles active at hour %d, using global: %.2fC/h",
                 target_hour,
                 lhs
             )
@@ -206,7 +206,7 @@ class LHSCalculationService:
         if avg_slope <= 0:
             lhs = self.calculate_global_lhs(heating_cycles)
             _LOGGER.debug(
-                "Calculated invalid average slope %.2f°C/h for hour %d, using default: %.2f°C/h",
+                "Calculated invalid average slope %.2fC/h for hour %d, using default: %.2fC/h",
                 avg_slope,
                 target_hour,
                 lhs
@@ -217,7 +217,7 @@ class LHSCalculationService:
         
         if capped_slope != avg_slope:
             _LOGGER.info(
-                "Calculated contextual LHS for hour %d from %d active cycles: %.2f°C/h, capped to %.2f°C/h",
+                "Calculated contextual LHS for hour %d from %d active cycles: %.2fC/h, capped to %.2fC/h",
                 target_hour,
                 len(active_cycles),
                 avg_slope,
@@ -225,7 +225,7 @@ class LHSCalculationService:
             )
         else:
             _LOGGER.info(
-                "Calculated contextual LHS for hour %d from %d active cycles: %.2f°C/h",
+                "Calculated contextual LHS for hour %d from %d active cycles: %.2fC/h",
                 target_hour,
                 len(active_cycles),
                 avg_slope

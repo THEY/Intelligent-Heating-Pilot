@@ -16,6 +16,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+_logged_missing_attrs: set[tuple[str, str]] = set()
+
 
 def get_vtherm_attribute(
     state: State | None,
@@ -72,10 +74,14 @@ def get_vtherm_attribute(
         )
         return value
     
-    _LOGGER.debug(
-        "Attribute %s not found in state %s, using default: %s",
-        attribute_name,
-        state.entity_id,
-        default,
-    )
+    # Only log the first miss per (entity, attribute) to avoid log spam
+    miss_key = (state.entity_id, attribute_name)
+    if miss_key not in _logged_missing_attrs:
+        _logged_missing_attrs.add(miss_key)
+        _LOGGER.debug(
+            "Attribute %s not found in state %s, using default: %s",
+            attribute_name,
+            state.entity_id,
+            default,
+        )
     return default

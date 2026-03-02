@@ -79,13 +79,13 @@ class HeatingApplicationService:
             history_lookback_days: Number of days of HA history to query
                 to extract heating cycles (default: DEFAULT_DATA_RETENTION_DAYS)
             decision_mode: Decision mode ('simple' or 'ml')
-            temp_delta_threshold: Temperature threshold for cycle detection (°C)
+            temp_delta_threshold: Temperature threshold for cycle detection (C)
             cycle_split_duration_minutes: Duration for splitting long cycles (minutes, 0=disabled)
             min_cycle_duration_minutes: Minimum cycle duration (minutes)
             max_cycle_duration_minutes: Maximum cycle duration (minutes)
-            max_heating_slope: Maximum heating slope in °C/h to cap outlier cycles (default: 10.0)
+            max_heating_slope: Maximum heating slope in C/h to cap outlier cycles (default: 10.0)
             manual_slope_mode: If True, use manual_slope_value instead of calculating LHS
-            manual_slope_value: Manual heating slope in °C/h (used when manual_slope_mode is True)
+            manual_slope_value: Manual heating slope in C/h (used when manual_slope_mode is True)
             use_vtherm_heat_rate: If True, use VTherm's auto TPI Heat Rate instead of calculating LHS
         """
         self._scheduler_reader = scheduler_reader
@@ -179,14 +179,14 @@ class HeatingApplicationService:
             target_time: Target schedule time
             
         Returns:
-            Contextual LHS in °C/h or global LHS as fallback, or VTherm Heat Rate/manual slope if enabled
+            Contextual LHS in C/h or global LHS as fallback, or VTherm Heat Rate/manual slope if enabled
         """
         # Priority 1: If VTherm Heat Rate is enabled, use it
         if self._use_vtherm_heat_rate:
             vtherm_heat_rate = self._environment_reader.get_vtherm_heat_rate()
             if vtherm_heat_rate is not None:
                 _LOGGER.info(
-                    "Using VTherm Heat Rate: %.2f°C/h",
+                    "Using VTherm Heat Rate: %.2fC/h",
                     vtherm_heat_rate
                 )
                 return vtherm_heat_rate
@@ -198,7 +198,7 @@ class HeatingApplicationService:
         # Priority 2: If manual mode is enabled, return the manual value
         if self._manual_slope_mode:
             _LOGGER.info(
-                "Manual slope mode enabled, using manual slope: %.2f°C/h",
+                "Manual slope mode enabled, using manual slope: %.2fC/h",
                 self._manual_slope_value
             )
             return self._manual_slope_value
@@ -242,7 +242,7 @@ class HeatingApplicationService:
                 target_hour=target_hour,
             )
             _LOGGER.info(
-                "Contextual LHS for hour %02d from %d cycles: %.2f°C/h",
+                "Contextual LHS for hour %02d from %d cycles: %.2fC/h",
                 target_hour,
                 len(heating_cycles),
                 contextual_lhs,
@@ -252,7 +252,7 @@ class HeatingApplicationService:
         # Fallback: if adapters unavailable or cycles empty, use global learned LHS
         global_lhs = await self._model_storage.get_learned_heating_slope()
         _LOGGER.warning(
-            "No HeatingCycles available, using global LHS: %.2f°C/h",
+            "No HeatingCycles available, using global LHS: %.2fC/h",
             global_lhs,
         )
         return global_lhs
@@ -535,7 +535,7 @@ class HeatingApplicationService:
         # Check if already at target
         if environment.indoor_temperature >= timeslot.target_temp:
             _LOGGER.debug(
-                "Already at target (%.1f°C >= %.1f°C)",
+                "Already at target (%.1fC >= %.1fC)",
                 environment.indoor_temperature,
                 timeslot.target_temp
             )
@@ -548,7 +548,7 @@ class HeatingApplicationService:
                 "anticipation_minutes": 0,
                 "current_temp": environment.indoor_temperature,
                 "learned_heating_slope": lhs,
-                "confidence_level": 100,
+                "confidence_level": 1.0,
                 "timeslot_id": timeslot.timeslot_id,
                 "scheduler_entity": timeslot.scheduler_entity,
             }
@@ -565,7 +565,7 @@ class HeatingApplicationService:
         )
         
         _LOGGER.info(
-            "Anticipation: start at %s (%.1f min) for target %.1f°C at %s (LHS: %.2f°C/h, confidence: %.2f)",
+            "Anticipation: start at %s (%.1f min) for target %.1fC at %s (LHS: %.2fC/h, confidence: %.2f)",
             prediction.anticipated_start_time.isoformat(),
             prediction.estimated_duration_minutes,
             timeslot.target_temp,
@@ -643,7 +643,7 @@ class HeatingApplicationService:
             if minutes_later >= DEFAULT_REVERT_MIN_MINUTES_LATER and self._preheating_target_time == target_time:
                 _LOGGER.info(
                     "Anticipated start time moved significantly later (now: %s, new start: %s, +%.1f min). "
-                    "LHS improved from %.2f to %.2f°C/h. Reverting to current scheduled state.",
+                    "LHS improved from %.2f to %.2fC/h. Reverting to current scheduled state.",
                     now.isoformat(),
                     anticipated_start.isoformat(),
                     minutes_later,
@@ -739,7 +739,7 @@ class HeatingApplicationService:
         
         if estimated_temp >= overshoot_threshold and self._is_preheating_active:
             _LOGGER.info(
-                "Overshoot risk! Current: %.1f°C, estimated: %.1f°C, target: %.1f°C - reverting to current schedule",
+                "Overshoot risk! Current: %.1fC, estimated: %.1fC, target: %.1fC - reverting to current schedule",
                 environment.indoor_temperature,
                 estimated_temp,
                 timeslot.target_temp
